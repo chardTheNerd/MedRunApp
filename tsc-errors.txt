@@ -1,0 +1,19 @@
+src/data/supabase/connectors/authConnector.ts(5,10): error TS2305: Module '"../errors"' has no exported member 'throwIfError'.
+src/data/supabase/connectors/authConnector.ts(5,24): error TS2305: Module '"../errors"' has no exported member 'mapAuthError'.
+src/data/supabase/connectors/consultationsConnector.ts(4,10): error TS2305: Module '"../errors"' has no exported member 'throwIfError'.
+src/data/supabase/connectors/consultationsConnector.ts(5,10): error TS2305: Module '"../mappers"' has no exported member 'consultationFromRow'.
+src/data/supabase/connectors/consultationsConnector.ts(5,31): error TS2305: Module '"../mappers"' has no exported member 'messageFromRow'.
+src/data/supabase/connectors/inventoryConnector.ts(5,10): error TS2305: Module '"../errors"' has no exported member 'throwIfError'.
+src/data/supabase/connectors/ordersConnector.ts(5,10): error TS2305: Module '"../errors"' has no exported member 'throwIfError'.
+src/data/supabase/connectors/ordersConnector.ts(6,10): error TS2305: Module '"../mappers"' has no exported member 'orderFromRow'.
+src/data/supabase/connectors/pharmaciesConnector.ts(4,10): error TS2305: Module '"../errors"' has no exported member 'throwIfError'.
+src/data/supabase/connectors/pharmaciesConnector.ts(18,26): error TS2345: Argument of type 'import("C:/Users/USER/Downloads/MedRunApp/src/data/supabase/rows").PharmacyRow' is not assignable to parameter of type 'import("C:/Users/USER/Downloads/MedRunApp/src/data/supabase/mappers").PharmacyRow'.
+  Type 'PharmacyRow' is missing the following properties from type 'PharmacyRow': street, city, lga, state
+src/data/supabase/connectors/pharmaciesConnector.ts(81,10): error TS2345: Argument of type '(row: PharmacyRow) => Pharmacy' is not assignable to parameter of type '(value: PharmacyRow, index: number, array: PharmacyRow[]) => Pharmacy'.
+  Types of parameters 'row' and 'value' are incompatible.
+    Type 'PharmacyRow' is missing the following properties from type 'PharmacyRow': street, city, lga, state
+src/data/supabase/connectors/usersConnector.ts(4,10): error TS2305: Module '"../errors"' has no exported member 'throwIfError'.
+src/data/supabase/mappers.ts(49,5): error TS2322: Type '{ latitude: number; longitude: number; }' is not assignable to type 'GeoIndexedLocation'.
+  Property 'geohash' is missing in type '{ latitude: number; longitude: number; }' but required in type '{ geohash: string; }'.
+src/data/supabase/mappers.ts(94,5): error TS2322: Type '{ latitude: number; longitude: number; }' is not assignable to type 'GeoIndexedLocation'.
+  Property 'geohash' is missing in type '{ latitude: number; longitude: number; }' but required in type '{ geohash: string; }'.

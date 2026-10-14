@@ -1,0 +1,99 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function userData() {
+      return get(/databases/$(database)/documents/users/$(uid())).data;
+    }
+
+    function isStaff(pharmacyId) {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/pharmacies/$(pharmacyId)/staff/$(uid()));
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && uid() == userId;
+      allow create: if signedIn() && uid() == userId
+        && request.resource.data.role in ['patient', 'pharmacy_admin', 'pharmacist', 'consultant']
+        && request.resource.data.locale == 'en-NG';
+      allow update: if signedIn() && uid() == userId;
+      allow delete: if false;
+    }
+
+    match /pharmacies/{pharmacyId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.ownerId == uid()
+        && request.resource.data.address.country == 'NG';
+      allow update: if isStaff(pharmacyId) || resource.data.ownerId == uid();
+      allow delete: if false;
+
+      match /staff/{staffId} {
+        allow read: if signedIn();
+        allow write: if resource == null
+          ? signedIn() && get(/databases/$(database)/documents/pharmacies/$(pharmacyId)).data.ownerId == uid()
+          : get(/databases/$(database)/documents/pharmacies/$(pharmacyId)).data.ownerId == uid();
+      }
+    }
+
+    match /medicines/{medicineId} {
+      allow read: if signedIn();
+      allow write: if signedIn() && userData().role in ['pharmacy_admin', 'pharmacist'];
+    }
+
+    match /listings/{listingId} {
+      allow read: if signedIn();
+      allow create, update: if isStaff(request.resource.data.pharmacyId)
+        && request.resource.data.currency == 'NGN';
+      allow delete: if isStaff(resource.data.pharmacyId);
+    }
+
+    match /orders/{orderId} {
+      allow read: if signedIn() && (
+        resource.data.patientId == uid() || isStaff(resource.data.pharmacyId)
+      );
+      allow create: if signedIn()
+        && request.resource.data.patientId == uid()
+        && request.resource.data.currency == 'NGN'
+        && request.resource.data.status == 'pending';
+      allow update: if signedIn() && (
+        (resource.data.patientId == uid() && request.resource.data.status in ['pending', 'cancelled']) ||
+        isStaff(resource.data.pharmacyId)
+      );
+      allow delete: if false;
+    }
+
+    match /consultations/{consultationId} {
+      allow read: if signedIn() && (
+        resource.data.patientId == uid() ||
+        resource.data.consultantId == uid() ||
+        (resource.data.pharmacyId is string && isStaff(resource.data.pharmacyId))
+      );
+      allow create: if signedIn()
+        && request.resource.data.patientId == uid()
+        && request.resource.data.status == 'requested';
+      allow update: if signedIn() && (
+        resource.data.patientId == uid() ||
+        resource.data.consultantId == uid() ||
+        (resource.data.pharmacyId is string && isStaff(resource.data.pharmacyId))
+      );
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if signedIn() && (
+          get(/databases/$(database)/documents/consultations/$(consultationId)).data.patientId == uid() ||
+          get(/databases/$(database)/documents/consultations/$(consultationId)).data.consultantId == uid()
+        );
+        allow create: if signedIn() && request.resource.data.senderId == uid();
+        allow update, delete: if false;
+      }
+    }
+  }
+}

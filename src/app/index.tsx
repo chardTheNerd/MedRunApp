@@ -1,5 +1,4 @@
 import * as Location from 'expo-location';
-import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { env, isSupabaseConfigured } from '../core/config/env';
@@ -12,11 +11,12 @@ import { AuthForm } from '../presentation/components/AuthForm';
 import { ListingCard } from '../presentation/components/ListingCard';
 import { useAuth } from '../presentation/providers/AuthProvider';
 import { useCatalog } from '../presentation/providers/CatalogProvider';
+import { useConsultSheet } from '../presentation/providers/ConsultSheetProvider';
 
 const LAGOS_FALLBACK: GeoCoordinate = { latitude: 6.5244, longitude: 3.3792 };
 
 export default function HomeScreen() {
-  const router = useRouter();
+  const { openConsult } = useConsultSheet();
   const auth = useAuth();
   const catalog = useCatalog();
   const [query, setQuery] = useState('');
@@ -63,9 +63,9 @@ export default function HomeScreen() {
   }
 
   function handleAsk(listing: InventoryListing) {
-    router.push({
-      pathname: '/consult',
-      params: { drug: `${listing.brandName} (${listing.genericName})`, pharmacyId: listing.pharmacyId },
+    openConsult({
+      drug: `${listing.brandName} (${listing.genericName})`,
+      pharmacyId: listing.pharmacyId,
     });
   }
 

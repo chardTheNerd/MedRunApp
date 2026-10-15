@@ -1,26 +1,21 @@
 import { BlurView } from 'expo-blur';
-import { usePathname, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../../core/theme/colors';
+import { useConsultSheet } from '../providers/ConsultSheetProvider';
 
 /**
  * Floating glass "Ask a Pharmacist" entry point. Rendered once in the root
- * layout so it is reachable from every screen; hidden on the consult screen
- * itself, where the conversation already lives.
+ * layout so it is reachable from every screen; opens the chat as a bottom
+ * sheet above the current route.
  */
 export function AskPharmacistButton() {
-  const pathname = usePathname();
-  const router = useRouter();
-
-  if (pathname === '/consult') {
-    return null;
-  }
+  const { openConsult } = useConsultSheet();
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel="Ask a pharmacist"
-      onPress={() => router.push('/consult')}
+      onPress={() => openConsult()}
       style={styles.floating}
     >
       <BlurView intensity={70} tint="light" style={styles.glass}>

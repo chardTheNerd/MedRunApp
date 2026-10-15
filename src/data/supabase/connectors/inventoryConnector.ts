@@ -2,6 +2,7 @@ import { InventoryListing } from '../../../domain/entities/InventoryListing';
 import { Medicine } from '../../../domain/entities/Medicine';
 import { NearbyListingQuery } from '../../../domain/repositories/InventoryRepository';
 import { getSupabase } from '../SupabaseClient';
+import { resolveDrugTerms } from '../drugSynonyms';
 import { throwIfError } from '../errors';
 import { listingFromRow, medicineFromRow } from '../mappers';
 import { ListingRow, MedicineRow } from '../rows';
@@ -17,8 +18,12 @@ export async function searchNearbyListings(input: NearbyListingQuery): Promise<I
     .select('*')
     .eq('is_available', true);
   throwIfError(error);
+  const { data: medicines, error: medicinesError } = await supabase
+    .from(TABLES.medicines)
+    .select('*');
+  throwIfError(medicinesError);
 
-  const needle = input.genericName?.trim().toLowerCase();
+  const terms = resolveDrugTerms(input.genericName ?? '', (medicines ?? []) as MedicineRow[]);
   return ((data ?? []) as ListingRow[])
     .map(listingFromRow)
     .filter((listing) => {
@@ -28,12 +33,12 @@ export async function searchNearbyListings(input: NearbyListingQuery): Promise<I
       if (input.state && listing.state !== input.state) {
         return false;
       }
-      if (
-        needle &&
-        !listing.genericName.toLowerCase().includes(needle) &&
-        !listing.brandName.toLowerCase().includes(needle)
-      ) {
-        return false;
+      if (terms.length > 0) {
+        const generic = listing.genericName.toLowerCase();
+        const brand = listing.brandName.toLowerCase();
+        if (!terms.some((term) => generic.includes(term) || brand.includes(term))) {
+          return false;
+        }
       }
       return true;
     })

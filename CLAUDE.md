@@ -35,9 +35,8 @@ Clean-architecture layers under `src/`: `core` → `domain` → `data` → `pres
   (`useReducer` + state/dispatch contexts).
 - Data flow per feature: Supabase connector (`src/data/supabase/connectors/*`) → repository impl
   (`src/data/repositories/*Impl.ts`, converts throws to `Result<T>` with `wrap`) → domain use
-  case (`execute`). Note: connectors import `throwIfError`/`mapAuthError` helpers that do not
-  exist yet — `errors.ts` currently only exports `toAppError` — so `npx tsc --noEmit` fails;
-  this is known in-progress migration breakage, not something to fix opportunistically.
+  case (`execute`). Connectors throw `AppError` via `throwIfError`/`mapAuthError`
+  (`src/data/supabase/errors.ts`); repositories catch and wrap into `Result<T>`.
 - `Result<T>` (`src/core/types/result.ts`) is `{ ok: true; value } | { ok: false; error: AppError }`;
   errors are `AppError` codes (`src/core/errors/AppError.ts`). Connectors throw, repositories wrap.
 - Supabase schema mapping: `tables.ts` (table names) → `rows.ts` (row shapes) → `mappers.ts`

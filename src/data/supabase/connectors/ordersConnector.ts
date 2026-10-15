@@ -2,6 +2,7 @@ import { AppError } from '../../../core/errors/AppError';
 import { Order, OrderStatus } from '../../../domain/entities/Order';
 import { PlaceOrderInput } from '../../../domain/repositories/OrderRepository';
 import { getSupabase } from '../SupabaseClient';
+import { toNumber } from '../coerce';
 import { throwIfError } from '../errors';
 import { orderFromRow } from '../mappers';
 import { ListingRow, OrderRow } from '../rows';
@@ -24,13 +25,14 @@ export async function placeOrder(input: PlaceOrderInput): Promise<Order> {
       throw new AppError('not-found', `Listing ${item.listingId} was not found.`);
     }
     const listing = data as ListingRow;
+    const availableQty = toNumber(listing.quantity);
     if (listing.pharmacy_id !== input.pharmacyId) {
       throw new AppError('validation', 'Every item must belong to the same pharmacy.');
     }
-    if (!listing.is_available || listing.quantity < item.quantity) {
+    if (!listing.is_available || availableQty < item.quantity) {
       throw new AppError('conflict', `${listing.brand_name} is out of stock.`);
     }
-    const nextQty = listing.quantity - item.quantity;
+    const nextQty = availableQty - item.quantity;
     const { error: updateError } = await supabase
       .from(TABLES.listings)
       .update({ quantity: nextQty, is_available: nextQty > 0, updated_at: now })

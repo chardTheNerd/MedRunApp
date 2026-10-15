@@ -5,6 +5,7 @@ import { Order } from '../../domain/entities/Order';
 import { Pharmacy } from '../../domain/entities/Pharmacy';
 import { DeliveryAddress, User } from '../../domain/entities/User';
 import { ConsultationMessageRow, ConsultationRow, OrderRow, PharmacyRow } from './rows';
+import { toKobo, toNumber } from './coerce';
 
 /* ---------- Pharmacies ---------- */
 
@@ -17,14 +18,14 @@ export function pharmacyFromRow(row: PharmacyRow): Pharmacy {
     phoneE164: row.phone_e164,
     email: row.email,
     address: row.address,
-    location: { latitude: row.latitude, longitude: row.longitude, geohash: row.geohash },
+    location: { latitude: toNumber(row.latitude), longitude: toNumber(row.longitude), geohash: row.geohash },
     verificationStatus: row.verification_status,
     isActive: row.is_active,
     deliveryEnabled: row.delivery_enabled,
     pickupEnabled: row.pickup_enabled,
-    deliveryRadiusKm: Number(row.delivery_radius_km ?? 0),
-    ratingAvg: Number(row.rating_avg ?? 0),
-    reviewCount: row.review_count,
+    deliveryRadiusKm: toNumber(row.delivery_radius_km),
+    ratingAvg: toNumber(row.rating_avg),
+    reviewCount: toNumber(row.review_count),
     operatingHours: row.operating_hours,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
@@ -36,8 +37,8 @@ export function pharmacyFromRow(row: PharmacyRow): Pharmacy {
 export type ListingRow = {
   id: string; pharmacy_id: string; medicine_id: string; brand_name: string; generic_name: string;
   form: string | null; strength: string | null; nafdac_number: string | null; pack_size: string | null;
-  quantity: number; price_kobo: number | string; prescription_required: boolean;
-  expiry_date: string | null; latitude: number; longitude: number; geohash: string;
+  quantity: number | string; price_kobo: number | string; prescription_required: boolean;
+  expiry_date: string | null; latitude: number | string; longitude: number | string; geohash: string;
   state: string | null; lga: string | null; city: string | null; is_available: boolean; updated_at: string;
 };
 
@@ -57,12 +58,12 @@ export function listingFromRow(r: ListingRow): InventoryListing {
     strength: r.strength ?? '',
     nafdacNumber: r.nafdac_number,
     packSize: r.pack_size ?? '',
-    quantity: r.quantity,
-    priceKobo: Number(r.price_kobo),
+    quantity: toNumber(r.quantity),
+    priceKobo: toKobo(r.price_kobo),
     currency: 'NGN',
     prescriptionRequired: r.prescription_required,
     expiryDate: r.expiry_date ? new Date(r.expiry_date) : null,
-    location: { latitude: r.latitude, longitude: r.longitude, geohash: r.geohash },
+    location: { latitude: toNumber(r.latitude), longitude: toNumber(r.longitude), geohash: r.geohash },
     state: r.state as InventoryListing['state'],
     lga: r.lga ?? '',
     city: r.city ?? '',
@@ -116,9 +117,9 @@ export function orderFromRow(r: OrderRow): Order {
     patientId: r.patient_id,
     pharmacyId: r.pharmacy_id,
     items: r.items,
-    subtotalKobo: r.subtotal_kobo,
-    deliveryFeeKobo: r.delivery_fee_kobo,
-    totalKobo: r.total_kobo,
+    subtotalKobo: toKobo(r.subtotal_kobo),
+    deliveryFeeKobo: toKobo(r.delivery_fee_kobo),
+    totalKobo: toKobo(r.total_kobo),
     currency: 'NGN',
     fulfillment: r.fulfillment,
     deliveryAddress: r.delivery_address,

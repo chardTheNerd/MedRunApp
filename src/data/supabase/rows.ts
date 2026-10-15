@@ -22,6 +22,12 @@ import { DeliveryAddress, UserRole } from '../../domain/entities/User';
 /**
  * Supabase row shapes. Columns are snake_case and timestamps are ISO-8601
  * strings. JSONB columns reuse the domain shapes directly.
+ *
+ * IMPORTANT: PostgREST serializes Postgres `numeric` and `bigint` columns as
+ * STRINGS, not numbers. Any future numeric column with those types must be
+ * declared `number | string` here so the compiler forces the mapper to coerce
+ * it with `toNumber` (see ./coerce) instead of trusting it as a number.
+ * Getting this wrong crashes render code (e.g. `.toFixed` on a string).
  */
 export type UserRow = {
   id: string;
@@ -44,16 +50,16 @@ export type PharmacyRow = {
   phone_e164: string;
   email: string | null;
   address: PharmacyAddress;
-  latitude: number;
-  longitude: number;
+  latitude: number | string;
+  longitude: number | string;
   geohash: string;
   verification_status: PharmacyVerification;
   is_active: boolean;
   delivery_enabled: boolean;
   pickup_enabled: boolean;
-  delivery_radius_km: number;
-  rating_avg: number;
-  review_count: number;
+  delivery_radius_km: number | string;
+  rating_avg: number | string;
+  review_count: number | string;
   operating_hours: OperatingHours;
   created_at: string;
   updated_at: string;
@@ -88,13 +94,13 @@ export type ListingRow = {
   strength: string;
   nafdac_number: string | null;
   pack_size: string;
-  quantity: number;
-  price_kobo: number;
+  quantity: number | string;
+  price_kobo: number | string;
   currency: 'NGN';
   prescription_required: boolean;
   expiry_date: string | null;
-  latitude: number;
-  longitude: number;
+  latitude: number | string;
+  longitude: number | string;
   geohash: string;
   state: NigerianState;
   lga: string;
@@ -108,9 +114,9 @@ export type OrderRow = {
   patient_id: string;
   pharmacy_id: string;
   items: OrderItem[];
-  subtotal_kobo: number;
-  delivery_fee_kobo: number;
-  total_kobo: number;
+  subtotal_kobo: number | string;
+  delivery_fee_kobo: number | string;
+  total_kobo: number | string;
   currency: 'NGN';
   fulfillment: FulfillmentType;
   delivery_address: DeliveryAddress | null;

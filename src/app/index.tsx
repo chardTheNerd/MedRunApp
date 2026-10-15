@@ -2,7 +2,7 @@ import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { env, isSupabaseConfigured } from '../core/config/env';
+import { isSupabaseConfigured } from '../core/config/env';
 import { NIGERIAN_STATES } from '../core/config/nigeria';
 import { colors } from '../core/theme/colors';
 import { GeoCoordinate } from '../core/types/geo';
@@ -60,8 +60,8 @@ export default function HomeScreen() {
     if (!query.trim() || !center) {
       return;
     }
-    await catalog.searchListings({ center, radiusKm: env.searchRadiusKm, genericName: query.trim() });
-    await catalog.searchPharmacies({ center, radiusKm: env.searchRadiusKm });
+    await catalog.searchListings({ center, radiusKm: 50, genericName: query.trim() });
+    await catalog.searchPharmacies({ center, radiusKm: 50 });
   }
 
   const signedIn = auth.status === 'authenticated';
@@ -69,7 +69,7 @@ export default function HomeScreen() {
     ? 'Sign in below to search nearby pharmacies.'
     : catalog.loading
       ? 'Searching pharmacies near you…'
-      : `No matches within ${env.searchRadiusKm} km. Try another spelling or the generic name.`;
+      : `No matches within 50 km of Lagos. Try another spelling or the generic name.`;
 
   function handleOpen(listing: InventoryListing) {
     router.push({ pathname: '/listing/[id]', params: { id: listing.id } });

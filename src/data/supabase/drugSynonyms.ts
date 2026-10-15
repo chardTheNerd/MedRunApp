@@ -8,17 +8,21 @@ import { MedicineRow } from './rows';
  */
 export const NG_BRAND_TO_GENERIC: Record<string, string> = {
   panadol: 'paracetamol',
+  emzor: 'paracetamol',
   tylenol: 'paracetamol',
   amoxil: 'amoxicillin',
+  fidson: 'amoxicillin',
   augmentin: 'co-amoxiclav',
+  amoxiclav: 'co-amoxiclav',
   flagyl: 'metronidazole',
   septrin: 'co-trimoxazole',
   ciprotab: 'ciprofloxacin',
   nivaquine: 'chloroquine',
-  coartem: 'artemether',
-  lonart: 'artemether',
+  coartem: 'artemether/lumefantrine',
+  lonart: 'artemether/lumefantrine',
   ventolin: 'salbutamol',
   brufen: 'ibuprofen',
+  electral: 'oral rehydration salts',
   feldene: 'piroxicam',
   buscopan: 'hyoscine',
 };
@@ -66,10 +70,21 @@ export function resolveDrugTerms(rawQuery: string, medicines: MedicineRef[]): st
   const terms = new Set<string>();
   const addWithFamily = (term: string) => {
     terms.add(term);
+    for (const word of term.split(' ').filter((part) => part.length >= 4)) {
+      terms.add(word);
+    }
     const generic = genericOfBrand.get(term) ?? (brandsOfGeneric.has(term) ? term : undefined);
     if (generic) {
       terms.add(generic);
-      brandsOfGeneric.get(generic)?.forEach((brand) => terms.add(brand));
+      for (const word of generic.split(' ').filter((part) => part.length >= 4)) {
+        terms.add(word);
+      }
+      brandsOfGeneric.get(generic)?.forEach((brand) => {
+        terms.add(brand);
+        for (const word of brand.split(' ').filter((part) => part.length >= 4)) {
+          terms.add(word);
+        }
+      });
     }
   };
 

@@ -30,6 +30,7 @@ export function ListingCard({ listing, pharmacy, onAsk, onOpen }: ListingCardPro
           PCN {pharmacy.pcnLicenseNumber} · ★ {pharmacy.ratingAvg.toFixed(1)} ({pharmacy.reviewCount})
         </Text>
       ) : null}
+      {listing.nafdacNumber ? <Text style={styles.meta}>NAFDAC {listing.nafdacNumber}</Text> : null}
 
       <View style={styles.footer}>
         <View>

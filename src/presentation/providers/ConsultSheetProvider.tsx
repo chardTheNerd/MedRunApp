@@ -1,19 +1,6 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ConsultSheet } from '../components/ConsultSheet';
-
-export type ConsultSheetParams = {
-  drug?: string;
-  pharmacyId?: string;
-  consultationId?: string;
-};
-
-type ConsultSheetContextValue = {
-  params: ConsultSheetParams | null;
-  openConsult: (params?: ConsultSheetParams) => void;
-  closeConsult: () => void;
-};
-
-const ConsultSheetContext = createContext<ConsultSheetContextValue | null>(null);
+import { ConsultSheetContext, ConsultSheetParams } from './consultSheetContext';
 
 /**
  * Global bottom-sheet host for the pharmacist chat. Any screen opens it via
@@ -39,12 +26,4 @@ export function ConsultSheetProvider({ children }: { children: React.ReactNode }
       {params ? <ConsultSheet /> : null}
     </ConsultSheetContext.Provider>
   );
-}
-
-export function useConsultSheet() {
-  const value = useContext(ConsultSheetContext);
-  if (!value) {
-    throw new Error('useConsultSheet must be used inside ConsultSheetProvider.');
-  }
-  return value;
 }

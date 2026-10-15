@@ -11,7 +11,7 @@ import { AuthForm } from '../presentation/components/AuthForm';
 import { ListingCard } from '../presentation/components/ListingCard';
 import { useAuth } from '../presentation/providers/AuthProvider';
 import { useCatalog } from '../presentation/providers/CatalogProvider';
-import { useConsultSheet } from '../presentation/providers/ConsultSheetProvider';
+import { useConsultSheet } from '../presentation/providers/consultSheetContext';
 
 const LAGOS_FALLBACK: GeoCoordinate = { latitude: 6.5244, longitude: 3.3792 };
 

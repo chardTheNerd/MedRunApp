@@ -1,7 +1,7 @@
 import React from 'react';
 import { Sheet } from './Sheet';
 import { ConsultPanel } from './ConsultPanel';
-import { useConsultSheet } from '../providers/ConsultSheetProvider';
+import { useConsultSheet } from '../providers/consultSheetContext';
 
 /** Bottom-sheet host for the pharmacist chat, rendered above any screen. */
 export function ConsultSheet() {

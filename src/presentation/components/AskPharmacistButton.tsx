@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../../core/theme/colors';
-import { useConsultSheet } from '../providers/ConsultSheetProvider';
+import { useConsultSheet } from '../providers/consultSheetContext';
 
 /**
  * Floating glass "Ask a Pharmacist" entry point. Rendered once in the root

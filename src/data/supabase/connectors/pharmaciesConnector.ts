@@ -5,7 +5,7 @@ import { throwIfError } from '../errors';
 import { pharmacyFromRow } from '../mappers';
 import { PharmacyRow } from '../rows';
 import { TABLES } from '../tables';
-import { distanceKm, toGeoIndexed } from '../../firebase/geo';
+import { distanceKm, toGeoIndexed } from '../../../core/utils/geo';
 
 export async function getPharmacyById(pharmacyId: string): Promise<Pharmacy> {
   const supabase = getSupabase();

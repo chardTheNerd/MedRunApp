@@ -6,7 +6,7 @@ import { throwIfError } from '../errors';
 import { listingFromRow, medicineFromRow } from '../mappers';
 import { ListingRow, MedicineRow } from '../rows';
 import { TABLES } from '../tables';
-import { distanceKm, toGeoIndexed } from '../../firebase/geo';
+import { distanceKm, toGeoIndexed } from '../../../core/utils/geo';
 
 export async function searchNearbyListings(input: NearbyListingQuery): Promise<InventoryListing[]> {
   const supabase = getSupabase();

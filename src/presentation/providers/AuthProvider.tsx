@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
 import { container } from '../../app/di/container';
-import { isFirebaseConfigured } from '../../core/config/env';
+import { isSupabaseConfigured } from '../../core/config/env';
 import { User } from '../../domain/entities/User';
 
 type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'anonymous' | 'unconfigured';
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    if (!isFirebaseConfigured()) {
+    if (!isSupabaseConfigured()) {
       dispatch({ type: 'unconfigured' });
       return;
     }

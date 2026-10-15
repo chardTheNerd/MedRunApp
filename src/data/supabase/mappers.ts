@@ -1,60 +1,31 @@
-import { NigerianState } from '../../core/config/nigeria';
+import { Consultation, ConsultationMessage } from '../../domain/entities/Consultation';
 import { InventoryListing } from '../../domain/entities/InventoryListing';
 import { Medicine } from '../../domain/entities/Medicine';
-import { OperatingHours, Pharmacy, PharmacyVerification } from '../../domain/entities/Pharmacy';
+import { Order } from '../../domain/entities/Order';
+import { Pharmacy } from '../../domain/entities/Pharmacy';
 import { DeliveryAddress, User } from '../../domain/entities/User';
+import { ConsultationMessageRow, ConsultationRow, OrderRow, PharmacyRow } from './rows';
 
 /* ---------- Pharmacies ---------- */
-
-export type PharmacyRow = {
-  id: string;
-  owner_id: string | null;
-  name: string;
-  pcn_license_number: string;
-  phone_e164: string | null;
-  email: string | null;
-  street: string | null;
-  city: string | null;
-  lga: string | null;
-  state: string | null;
-  latitude: number;
-  longitude: number;
-  verification_status: string;
-  is_active: boolean;
-  delivery_enabled: boolean;
-  pickup_enabled: boolean;
-  delivery_radius_km: number | string;
-  rating_avg: number | string;
-  review_count: number;
-  operating_hours: unknown;
-  created_at: string;
-  updated_at: string;
-};
 
 export function pharmacyFromRow(row: PharmacyRow): Pharmacy {
   return {
     id: row.id,
     name: row.name,
     pcnLicenseNumber: row.pcn_license_number,
-    ownerId: row.owner_id ?? '',
-    phoneE164: row.phone_e164 ?? '',
+    ownerId: row.owner_id,
+    phoneE164: row.phone_e164,
     email: row.email,
-    address: {
-      street: row.street ?? '',
-      city: row.city ?? '',
-      lga: row.lga ?? '',
-      state: row.state as NigerianState,
-      country: 'NG',
-    },
-    location: { latitude: row.latitude, longitude: row.longitude },
-    verificationStatus: row.verification_status as PharmacyVerification,
+    address: row.address,
+    location: { latitude: row.latitude, longitude: row.longitude, geohash: row.geohash },
+    verificationStatus: row.verification_status,
     isActive: row.is_active,
     deliveryEnabled: row.delivery_enabled,
     pickupEnabled: row.pickup_enabled,
-    deliveryRadiusKm: Number(row.delivery_radius_km),
-    ratingAvg: Number(row.rating_avg),
+    deliveryRadiusKm: row.delivery_radius_km,
+    ratingAvg: row.rating_avg,
     reviewCount: row.review_count,
-    operatingHours: row.operating_hours as OperatingHours,
+    operatingHours: row.operating_hours,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   };
@@ -66,7 +37,7 @@ export type ListingRow = {
   id: string; pharmacy_id: string; medicine_id: string; brand_name: string; generic_name: string;
   form: string | null; strength: string | null; nafdac_number: string | null; pack_size: string | null;
   quantity: number; price_kobo: number | string; prescription_required: boolean;
-  expiry_date: string | null; latitude: number; longitude: number;
+  expiry_date: string | null; latitude: number; longitude: number; geohash: string;
   state: string | null; lga: string | null; city: string | null; is_available: boolean; updated_at: string;
 };
 
@@ -91,7 +62,7 @@ export function listingFromRow(r: ListingRow): InventoryListing {
     currency: 'NGN',
     prescriptionRequired: r.prescription_required,
     expiryDate: r.expiry_date ? new Date(r.expiry_date) : null,
-    location: { latitude: r.latitude, longitude: r.longitude },
+    location: { latitude: r.latitude, longitude: r.longitude, geohash: r.geohash },
     state: r.state as InventoryListing['state'],
     lga: r.lga ?? '',
     city: r.city ?? '',
@@ -134,5 +105,57 @@ export function userFromRow(r: UserRow): User {
     addresses: (r.addresses as DeliveryAddress[]) ?? [],
     createdAt: new Date(r.created_at),
     updatedAt: new Date(r.updated_at),
+  };
+}
+
+/* ---------- Orders ---------- */
+
+export function orderFromRow(r: OrderRow): Order {
+  return {
+    id: r.id,
+    patientId: r.patient_id,
+    pharmacyId: r.pharmacy_id,
+    items: r.items,
+    subtotalKobo: r.subtotal_kobo,
+    deliveryFeeKobo: r.delivery_fee_kobo,
+    totalKobo: r.total_kobo,
+    currency: 'NGN',
+    fulfillment: r.fulfillment,
+    deliveryAddress: r.delivery_address,
+    status: r.status,
+    payment: r.payment,
+    notes: r.notes,
+    createdAt: new Date(r.created_at),
+    updatedAt: new Date(r.updated_at),
+  };
+}
+
+/* ---------- Consultations ---------- */
+
+export function consultationFromRow(r: ConsultationRow): Consultation {
+  return {
+    id: r.id,
+    patientId: r.patient_id,
+    consultantId: r.consultant_id,
+    pharmacyId: r.pharmacy_id,
+    channel: r.channel,
+    status: r.status,
+    chiefComplaint: r.chief_complaint,
+    prescriptionIssued: r.prescription_issued,
+    relatedOrderId: r.related_order_id,
+    startedAt: r.started_at ? new Date(r.started_at) : null,
+    endedAt: r.ended_at ? new Date(r.ended_at) : null,
+    createdAt: new Date(r.created_at),
+    updatedAt: new Date(r.updated_at),
+  };
+}
+
+export function messageFromRow(r: ConsultationMessageRow): ConsultationMessage {
+  return {
+    id: r.id,
+    consultationId: r.consultation_id,
+    senderId: r.sender_id,
+    body: r.body,
+    createdAt: new Date(r.created_at),
   };
 }

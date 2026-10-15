@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../core/theme/colors';
+import { useTheme } from '../providers/ThemeProvider';
 
 type SheetProps = {
   visible: boolean;
@@ -14,6 +14,7 @@ type SheetProps = {
  * Backdrop tap and the X button dismiss; content scrolls inside the sheet.
  */
 export function Sheet({ visible, onClose, title, children }: SheetProps) {
+  const { palette } = useTheme();
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.backdrop}>
@@ -23,18 +24,18 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
           onPress={onClose}
           style={styles.dismissArea}
         />
-        <View style={styles.sheet}>
-          <View style={styles.handle} />
+        <View style={[styles.sheet, { backgroundColor: palette.background }]}>
+          <View style={[styles.handle, { backgroundColor: palette.muted }]} />
           {title ? (
             <View style={styles.header}>
-              <Text style={styles.title}>{title}</Text>
+              <Text style={[styles.title, { color: palette.ink }]}>{title}</Text>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Close sheet"
                 onPress={onClose}
                 style={styles.closeButton}
               >
-                <Text style={styles.closeText}>✕</Text>
+                <Text style={[styles.closeText, { color: palette.muted }]}>✕</Text>
               </Pressable>
             </View>
           ) : null}
@@ -56,7 +57,6 @@ const styles = StyleSheet.create({
   },
   sheet: {
     maxHeight: '85%',
-    backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 16,
@@ -67,7 +67,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colors.muted,
     opacity: 0.4,
     marginTop: 8,
   },
@@ -80,14 +79,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontWeight: '800',
-    color: colors.ink,
   },
   closeButton: {
     padding: 6,
   },
   closeText: {
     fontSize: 16,
-    color: colors.muted,
     fontWeight: '700',
   },
   body: {

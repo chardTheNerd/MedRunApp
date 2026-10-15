@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { colors } from '../../core/theme/colors';
 import { Consultation } from '../../domain/entities/Consultation';
 import { AuthForm } from '../components/AuthForm';
 import { useAuth } from '../providers/AuthProvider';
 import { useCatalog } from '../providers/CatalogProvider';
 import { useConsultations } from '../providers/ConsultationProvider';
+import { useTheme } from '../providers/ThemeProvider';
 
 export type ConsultPanelParams = {
   drug?: string;
@@ -22,6 +22,7 @@ export function ConsultPanel({ drug, pharmacyId, consultationId }: ConsultPanelP
   const auth = useAuth();
   const catalog = useCatalog();
   const consultations = useConsultations();
+  const { palette } = useTheme();
 
   const [activeId, setActiveId] = useState<string | null>(consultationId ?? null);
   const [created, setCreated] = useState<Consultation | null>(null);
@@ -97,8 +98,8 @@ export function ConsultPanel({ drug, pharmacyId, consultationId }: ConsultPanelP
   if (!auth.user) {
     return (
       <View>
-        <Text style={styles.title}>Sign in to chat with a pharmacist</Text>
-        <Text style={styles.body}>
+        <Text style={[styles.title, { color: palette.ink }]}>Sign in to chat with a pharmacist</Text>
+        <Text style={[styles.body, { color: palette.muted }]}>
           Consultations are linked to your account so a licensed pharmacist can follow up.
         </Text>
         <AuthForm />
@@ -109,21 +110,25 @@ export function ConsultPanel({ drug, pharmacyId, consultationId }: ConsultPanelP
   if (!active) {
     return (
       <View>
-        <Text style={styles.title}>Ask a licensed pharmacist</Text>
-        <Text style={styles.body}>
+        <Text style={[styles.title, { color: palette.ink }]}>Ask a licensed pharmacist</Text>
+        <Text style={[styles.body, { color: palette.muted }]}>
           {pharmacyId && catalog.selectedPharmacy
             ? `${catalog.selectedPharmacy.name} · PCN ${catalog.selectedPharmacy.pcnLicenseNumber}`
             : 'A verified pharmacist will respond here.'}
         </Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            { borderColor: palette.border, color: palette.ink, backgroundColor: palette.card },
+          ]}
           placeholder="Describe your question or symptoms"
+          placeholderTextColor={palette.muted}
           value={complaint}
           onChangeText={setComplaint}
           multiline
         />
         <Pressable
-          style={[styles.button, !complaint.trim() && styles.buttonDisabled]}
+          style={[styles.button, { backgroundColor: palette.brand }, !complaint.trim() && styles.buttonDisabled]}
           onPress={handleRequest}
           disabled={!complaint.trim() || consultations.loading}
         >
@@ -131,23 +136,30 @@ export function ConsultPanel({ drug, pharmacyId, consultationId }: ConsultPanelP
             {consultations.loading ? 'Starting…' : 'Start consultation'}
           </Text>
         </Pressable>
-        {consultations.error ? <Text style={styles.error}>{consultations.error}</Text> : null}
+        {consultations.error ? (
+          <Text style={[styles.error, { color: palette.danger }]}>{consultations.error}</Text>
+        ) : null}
 
-        <Text style={styles.sectionTitle}>Past consultations</Text>
+        <Text style={[styles.sectionTitle, { color: palette.ink }]}>Past consultations</Text>
         <FlatList
           data={consultations.consultations}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <Pressable style={styles.pastCard} onPress={() => setActiveId(item.id)}>
-              <Text style={styles.pastComplaint} numberOfLines={2}>
+            <Pressable
+              style={[styles.pastCard, { backgroundColor: palette.card }]}
+              onPress={() => setActiveId(item.id)}
+            >
+              <Text style={[styles.pastComplaint, { color: palette.ink }]} numberOfLines={2}>
                 {item.chiefComplaint}
               </Text>
-              <Text style={styles.pastMeta}>
+              <Text style={[styles.pastMeta, { color: palette.muted }]}>
                 {item.status} · {item.createdAt.toLocaleDateString('en-NG')}
               </Text>
             </Pressable>
           )}
-          ListEmptyComponent={<Text style={styles.empty}>No past consultations yet.</Text>}
+          ListEmptyComponent={
+            <Text style={[styles.empty, { color: palette.muted }]}>No past consultations yet.</Text>
+          }
         />
       </View>
     );
@@ -158,19 +170,21 @@ export function ConsultPanel({ drug, pharmacyId, consultationId }: ConsultPanelP
 
   return (
     <View style={styles.thread}>
-      <View style={styles.threadHeader}>
+      <View style={[styles.threadHeader, { backgroundColor: palette.card }]}>
         <View style={styles.threadTitles}>
-          <Text style={styles.threadTitle}>{pharmacy ? pharmacy.name : 'MedRun pharmacist'}</Text>
+          <Text style={[styles.threadTitle, { color: palette.ink }]}>
+            {pharmacy ? pharmacy.name : 'MedRun pharmacist'}
+          </Text>
           {pharmacy ? (
-            <Text style={styles.threadMeta}>
+            <Text style={[styles.threadMeta, { color: palette.muted }]}>
               PCN {pharmacy.pcnLicenseNumber} · {active.status}
             </Text>
           ) : (
-            <Text style={styles.threadMeta}>{active.status}</Text>
+            <Text style={[styles.threadMeta, { color: palette.muted }]}>{active.status}</Text>
           )}
         </View>
         {pharmacy?.phoneE164 ? (
-          <Pressable style={styles.callButton} onPress={handleCall}>
+          <Pressable style={[styles.callButton, { backgroundColor: palette.brandDark }]} onPress={handleCall}>
             <Text style={styles.callText}>Call</Text>
           </Pressable>
         ) : null}
@@ -180,26 +194,44 @@ export function ConsultPanel({ drug, pharmacyId, consultationId }: ConsultPanelP
         data={consultations.messages}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={[styles.bubble, isMine(item.senderId) ? styles.mine : styles.theirs]}>
-            <Text style={isMine(item.senderId) ? styles.mineText : styles.theirsText}>{item.body}</Text>
+          <View
+            style={[
+              styles.bubble,
+              isMine(item.senderId)
+                ? [styles.mine, { backgroundColor: palette.brand }]
+                : [styles.theirs, { backgroundColor: palette.card }],
+            ]}
+          >
+            <Text
+              style={isMine(item.senderId) ? styles.mineText : [styles.theirsText, { color: palette.ink }]}
+            >
+              {item.body}
+            </Text>
           </View>
         )}
-        ListEmptyComponent={<Text style={styles.empty}>Say hello — a pharmacist will join shortly.</Text>}
+        ListEmptyComponent={
+          <Text style={[styles.empty, { color: palette.muted }]}>
+            Say hello — a pharmacist will join shortly.
+          </Text>
+        }
         contentContainerStyle={styles.messages}
       />
 
-      {consultations.error ? <Text style={styles.error}>{consultations.error}</Text> : null}
+      {consultations.error ? (
+        <Text style={[styles.error, { color: palette.danger }]}>{consultations.error}</Text>
+      ) : null}
       <View style={styles.composer}>
         <TextInput
-          style={styles.composerInput}
+          style={[styles.composerInput, { backgroundColor: palette.card, color: palette.ink }]}
           placeholder="Type a message"
+          placeholderTextColor={palette.muted}
           value={draft}
           onChangeText={setDraft}
           multiline
           editable={!sending}
         />
         <Pressable
-          style={[styles.sendButton, (!draft.trim() || sending) && styles.buttonDisabled]}
+          style={[styles.sendButton, { backgroundColor: palette.brand }, (!draft.trim() || sending) && styles.buttonDisabled]}
           onPress={handleSend}
           disabled={!draft.trim() || sending}
         >
@@ -214,29 +246,23 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: colors.ink,
   },
   body: {
     fontSize: 14,
-    color: colors.muted,
     marginTop: 6,
     marginBottom: 12,
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.surface,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    color: colors.ink,
     minHeight: 80,
     textAlignVertical: 'top',
     marginBottom: 12,
-    backgroundColor: colors.white,
   },
   button: {
-    backgroundColor: colors.brand,
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
@@ -245,23 +271,20 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   buttonText: {
-    color: colors.white,
+    color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 15,
   },
   error: {
     marginTop: 8,
-    color: colors.danger,
   },
   sectionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: colors.ink,
     marginTop: 16,
     marginBottom: 8,
   },
   pastCard: {
-    backgroundColor: colors.white,
     borderRadius: 10,
     padding: 12,
     marginBottom: 8,
@@ -269,16 +292,13 @@ const styles = StyleSheet.create({
   pastComplaint: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.ink,
   },
   pastMeta: {
     fontSize: 12,
-    color: colors.muted,
     marginTop: 4,
   },
   empty: {
     textAlign: 'center',
-    color: colors.muted,
     fontSize: 13,
     marginTop: 12,
   },
@@ -289,7 +309,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
@@ -301,21 +320,18 @@ const styles = StyleSheet.create({
   threadTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: colors.ink,
   },
   threadMeta: {
     fontSize: 12,
-    color: colors.muted,
     marginTop: 2,
   },
   callButton: {
-    backgroundColor: colors.brandDark,
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
   callText: {
-    color: colors.white,
+    color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 13,
   },
@@ -331,18 +347,15 @@ const styles = StyleSheet.create({
   },
   mine: {
     alignSelf: 'flex-end',
-    backgroundColor: colors.brand,
   },
   theirs: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.white,
   },
   mineText: {
-    color: colors.white,
+    color: '#FFFFFF',
     fontSize: 14,
   },
   theirsText: {
-    color: colors.ink,
     fontSize: 14,
   },
   composer: {
@@ -352,16 +365,13 @@ const styles = StyleSheet.create({
   },
   composerInput: {
     flex: 1,
-    backgroundColor: colors.white,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    color: colors.ink,
     maxHeight: 100,
   },
   sendButton: {
-    backgroundColor: colors.brand,
     borderRadius: 12,
     paddingHorizontal: 18,
     justifyContent: 'center',

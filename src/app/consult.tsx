@@ -1,8 +1,8 @@
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { colors } from '../core/theme/colors';
 import { ConsultPanel } from '../presentation/components/ConsultPanel';
+import { useTheme } from '../presentation/providers/ThemeProvider';
 
 function first(value?: string | string[]): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -14,8 +14,9 @@ function first(value?: string | string[]): string | undefined {
  */
 export default function ConsultScreen() {
   const params = useLocalSearchParams<{ drug?: string; pharmacyId?: string; consultationId?: string }>();
+  const { palette } = useTheme();
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: palette.background }]}>
       <ConsultPanel
         drug={first(params.drug)}
         pharmacyId={first(params.pharmacyId)}
@@ -28,7 +29,6 @@ export default function ConsultScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface,
     padding: 16,
   },
 });

@@ -2,16 +2,21 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AppProviders } from '../presentation/AppProviders';
 import { AskPharmacistButton } from '../presentation/components/AskPharmacistButton';
-import { colors } from '../core/theme/colors';
+import { lightPalette } from '../core/theme/colors';
+import { useTheme } from '../presentation/providers/ThemeProvider';
 
-export default function RootLayout() {
+function ThemedStack() {
+  const { effective } = useTheme();
   return (
-    <AppProviders>
+    <>
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: colors.brand },
-          headerTintColor: colors.white,
+          headerStyle: { backgroundColor: lightPalette.brand },
+          headerTintColor: '#FFFFFF',
           headerTitleStyle: { fontWeight: '700' },
+          contentStyle: {
+            backgroundColor: effective === 'dark' ? '#0C1626' : '#F2F6FC',
+          },
         }}
       >
         <Stack.Screen name="index" options={{ title: 'MedRun' }} />
@@ -19,7 +24,15 @@ export default function RootLayout() {
         <Stack.Screen name="listing/[id]" options={{ title: 'Medicine' }} />
       </Stack>
       <AskPharmacistButton />
-      <StatusBar style="light" />
+      <StatusBar style={effective === 'dark' ? 'light' : 'dark'} />
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AppProviders>
+      <ThemedStack />
     </AppProviders>
   );
 }

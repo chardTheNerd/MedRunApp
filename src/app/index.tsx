@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { isSupabaseConfigured } from '../core/config/env';
 import { NIGERIAN_STATES } from '../core/config/nigeria';
-import { colors } from '../core/theme/colors';
 import { GeoCoordinate } from '../core/types/geo';
 import { InventoryListing } from '../domain/entities/InventoryListing';
 import { Pharmacy } from '../domain/entities/Pharmacy';
@@ -13,12 +12,14 @@ import { ListingCard } from '../presentation/components/ListingCard';
 import { useAuth } from '../presentation/providers/AuthProvider';
 import { useCatalog } from '../presentation/providers/CatalogProvider';
 import { useConsultSheet } from '../presentation/providers/consultSheetContext';
+import { useTheme } from '../presentation/providers/ThemeProvider';
 
 const LAGOS_FALLBACK: GeoCoordinate = { latitude: 6.5244, longitude: 3.3792 };
 
 export default function HomeScreen() {
   const router = useRouter();
   const { openConsult } = useConsultSheet();
+  const { palette, mode, toggle } = useTheme();
   const auth = useAuth();
   const catalog = useCatalog();
   const [query, setQuery] = useState('');
@@ -83,15 +84,26 @@ export default function HomeScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchSection}>
-        <Text style={styles.title}>Find your medicine nearby</Text>
+    <View style={[styles.container, { backgroundColor: palette.background }]}>
+      <View style={[styles.searchSection, { backgroundColor: palette.brand }]}>
+        <View style={styles.topRow}>
+          <Text style={styles.title}>Find your medicine nearby</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            onPress={toggle}
+            style={styles.themeToggle}
+          >
+            <Text style={styles.themeToggleText}>{mode === 'dark' ? '☀️' : '🌙'}</Text>
+          </Pressable>
+        </View>
         <Text style={styles.subtitle}>
           Search brand or generic names — e.g. Panadol, paracetamol, Augmentin.
         </Text>
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { backgroundColor: palette.card, color: palette.ink }]}
           placeholder="Drug name (brand or generic)"
+          placeholderTextColor={palette.muted}
           value={query}
           onChangeText={setQuery}
           autoCapitalize="none"
@@ -100,7 +112,11 @@ export default function HomeScreen() {
           editable={!catalog.loading}
         />
         <Pressable
-          style={[styles.searchButton, (!query.trim() || !center || !signedIn) && styles.buttonDisabled]}
+          style={[
+            styles.searchButton,
+            { backgroundColor: palette.brandDark },
+            (!query.trim() || !center || !signedIn) && styles.buttonDisabled,
+          ]}
           onPress={handleSearch}
           disabled={!query.trim() || !center || !signedIn}
         >
@@ -112,7 +128,9 @@ export default function HomeScreen() {
         {!isSupabaseConfigured() ? (
           <Text style={styles.error}>Supabase keys not set — connect a backend to search.</Text>
         ) : null}
-        {catalog.error ? <Text style={styles.error}>{catalog.error}</Text> : null}
+        {catalog.error ? (
+          <Text style={[styles.error, { color: palette.danger }]}>{catalog.error}</Text>
+        ) : null}
       </View>
 
       <FlatList
@@ -127,13 +145,13 @@ export default function HomeScreen() {
           />
         )}
         ListEmptyComponent={
-          <Text style={styles.empty}>{emptyMessage}</Text>
+          <Text style={[styles.empty, { color: palette.muted }]}>{emptyMessage}</Text>
         }
         ListFooterComponent={
-          <View style={styles.account}>
-            <Text style={styles.accountTitle}>Account</Text>
+          <View style={[styles.account, { backgroundColor: palette.card }]}>
+            <Text style={[styles.accountTitle, { color: palette.ink }]}>Account</Text>
             <AuthForm />
-            <Text style={styles.coverage}>
+            <Text style={[styles.coverage, { color: palette.muted }]}>
               Coverage: {NIGERIAN_STATES.length} states including FCT ·{' '}
               {auth.status === 'authenticated' ? `Signed in as ${auth.user?.displayName}` : 'Signed out'}
             </Text>
@@ -148,38 +166,45 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface,
   },
   searchSection: {
-    backgroundColor: colors.brand,
     paddingHorizontal: 16,
     paddingTop: 20,
     paddingBottom: 16,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  themeToggle: {
+    padding: 6,
+  },
+  themeToggleText: {
+    fontSize: 20,
+  },
   title: {
+    flex: 1,
     fontSize: 22,
     fontWeight: '800',
-    color: colors.white,
+    color: '#FFFFFF',
   },
   subtitle: {
     fontSize: 13,
-    color: colors.white,
+    color: '#FFFFFF',
     opacity: 0.85,
     marginTop: 4,
     marginBottom: 12,
   },
   searchInput: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: colors.ink,
   },
   searchButton: {
-    backgroundColor: colors.brandDark,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
@@ -189,18 +214,17 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   searchButtonText: {
-    color: colors.white,
+    color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 16,
   },
   notice: {
     marginTop: 8,
-    color: colors.white,
+    color: '#FFFFFF',
     fontSize: 12,
   },
   error: {
     marginTop: 8,
-    color: '#FFD6D6',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -209,12 +233,10 @@ const styles = StyleSheet.create({
   },
   empty: {
     textAlign: 'center',
-    color: colors.muted,
     fontSize: 14,
     marginTop: 24,
   },
   account: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 14,
     marginTop: 8,
@@ -223,12 +245,10 @@ const styles = StyleSheet.create({
   accountTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.ink,
     marginBottom: 8,
   },
   coverage: {
     fontSize: 12,
-    color: colors.muted,
     marginTop: 12,
   },
 });

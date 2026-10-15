@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../core/theme/colors';
 import { useConsultSheet } from '../providers/consultSheetContext';
+import { useTheme } from '../providers/ThemeProvider';
 
 /**
  * Floating glass "Ask a Pharmacist" entry point. Rendered once in the root
@@ -9,7 +9,12 @@ import { useConsultSheet } from '../providers/consultSheetContext';
  * sheet above the current route.
  */
 export function AskPharmacistButton() {
-  const { openConsult } = useConsultSheet();
+  const { openConsult, params } = useConsultSheet();
+  const { effective } = useTheme();
+
+  if (params) {
+    return null;
+  }
 
   return (
     <Pressable
@@ -18,7 +23,7 @@ export function AskPharmacistButton() {
       onPress={() => openConsult()}
       style={styles.floating}
     >
-      <BlurView intensity={70} tint="light" style={styles.glass}>
+      <BlurView intensity={70} tint={effective === 'dark' ? 'dark' : 'light'} style={styles.glass}>
         <View style={styles.tint}>
           <Text style={styles.icon}>💊</Text>
           <Text style={styles.label}>Ask a Pharmacist</Text>
@@ -52,13 +57,13 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: 'rgba(11, 110, 79, 0.55)',
+    backgroundColor: 'rgba(29, 111, 220, 0.55)',
   },
   icon: {
     fontSize: 18,
   },
   label: {
-    color: colors.white,
+    color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 14,
   },

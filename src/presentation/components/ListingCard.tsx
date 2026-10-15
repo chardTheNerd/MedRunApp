@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../core/theme/colors';
 import { formatNaira } from '../../core/utils/money';
 import { InventoryListing } from '../../domain/entities/InventoryListing';
 import { Pharmacy } from '../../domain/entities/Pharmacy';
+import { useTheme } from '../providers/ThemeProvider';
 
 type ListingCardProps = {
   listing: InventoryListing;
@@ -12,30 +12,38 @@ type ListingCardProps = {
 };
 
 export function ListingCard({ listing, pharmacy, onAsk, onOpen }: ListingCardProps) {
+  const { palette } = useTheme();
   return (
-    <Pressable onPress={() => onOpen(listing)} style={styles.card}>
+    <Pressable
+      onPress={() => onOpen(listing)}
+      style={[styles.card, { backgroundColor: palette.card, borderColor: palette.border }]}
+    >
       <View style={styles.header}>
         <View style={styles.titles}>
-          <Text style={styles.brand}>{listing.brandName}</Text>
-          <Text style={styles.generic}>
+          <Text style={[styles.brand, { color: palette.ink }]}>{listing.brandName}</Text>
+          <Text style={[styles.generic, { color: palette.muted }]}>
             {listing.genericName} · {listing.strength} · {listing.packSize}
           </Text>
         </View>
-        {listing.prescriptionRequired ? <Text style={styles.rx}>Rx</Text> : null}
+        {listing.prescriptionRequired ? (
+          <Text style={[styles.rx, { backgroundColor: palette.accent }]}>Rx</Text>
+        ) : null}
       </View>
 
-      <Text style={styles.pharmacy}>{pharmacy?.name ?? 'Pharmacy'}</Text>
+      <Text style={[styles.pharmacy, { color: palette.brandDark }]}>{pharmacy?.name ?? 'Pharmacy'}</Text>
       {pharmacy ? (
-        <Text style={styles.meta}>
+        <Text style={[styles.meta, { color: palette.muted }]}>
           PCN {pharmacy.pcnLicenseNumber} · ★ {pharmacy.ratingAvg.toFixed(1)} ({pharmacy.reviewCount})
         </Text>
       ) : null}
-      {listing.nafdacNumber ? <Text style={styles.meta}>NAFDAC {listing.nafdacNumber}</Text> : null}
+      {listing.nafdacNumber ? (
+        <Text style={[styles.meta, { color: palette.muted }]}>NAFDAC {listing.nafdacNumber}</Text>
+      ) : null}
 
       <View style={styles.footer}>
         <View>
-          <Text style={styles.price}>{formatNaira(listing.priceKobo)}</Text>
-          <Text style={styles.meta}>
+          <Text style={[styles.price, { color: palette.ink }]}>{formatNaira(listing.priceKobo)}</Text>
+          <Text style={[styles.meta, { color: palette.muted }]}>
             {listing.distanceKm != null ? `${listing.distanceKm.toFixed(1)} km away` : 'Distance unknown'} ·{' '}
             {listing.quantity > 0 ? `${listing.quantity} in stock` : 'Out of stock'}
           </Text>
@@ -44,7 +52,7 @@ export function ListingCard({ listing, pharmacy, onAsk, onOpen }: ListingCardPro
           accessibilityRole="button"
           accessibilityLabel={`Ask a pharmacist about ${listing.brandName}`}
           onPress={() => onAsk(listing)}
-          style={styles.askButton}
+          style={[styles.askButton, { backgroundColor: palette.brand }]}
         >
           <Text style={styles.askText}>Ask about this</Text>
         </Pressable>
@@ -55,12 +63,10 @@ export function ListingCard({ listing, pharmacy, onAsk, onOpen }: ListingCardPro
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: colors.surface,
   },
   header: {
     flexDirection: 'row',
@@ -74,18 +80,15 @@ const styles = StyleSheet.create({
   brand: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.ink,
   },
   generic: {
     fontSize: 13,
-    color: colors.muted,
     marginTop: 2,
   },
   rx: {
     fontSize: 12,
     fontWeight: '700',
-    color: colors.white,
-    backgroundColor: colors.accent,
+    color: '#FFFFFF',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -94,12 +97,10 @@ const styles = StyleSheet.create({
   pharmacy: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.brandDark,
     marginTop: 8,
   },
   meta: {
     fontSize: 12,
-    color: colors.muted,
     marginTop: 2,
   },
   footer: {
@@ -112,16 +113,14 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.ink,
   },
   askButton: {
-    backgroundColor: colors.brand,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   askText: {
-    color: colors.white,
+    color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 13,
   },

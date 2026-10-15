@@ -1,7 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../core/theme/colors';
 import { formatNaira } from '../../core/utils/money';
 import { InventoryListing } from '../../domain/entities/InventoryListing';
 import { AuthForm } from '../../presentation/components/AuthForm';
@@ -9,6 +8,7 @@ import { useAuth } from '../../presentation/providers/AuthProvider';
 import { useCatalog } from '../../presentation/providers/CatalogProvider';
 import { useConsultSheet } from '../../presentation/providers/consultSheetContext';
 import { useOrders } from '../../presentation/providers/OrderProvider';
+import { useTheme } from '../../presentation/providers/ThemeProvider';
 import { container } from '../../di/container';
 
 function first(value?: string | string[]): string | undefined {
@@ -28,6 +28,7 @@ export default function ListingDetailScreen() {
   const catalog = useCatalog();
   const orders = useOrders();
   const { openConsult } = useConsultSheet();
+  const { palette } = useTheme();
 
   const [listing, setListing] = useState<InventoryListing | null>(null);
   const [loading, setLoading] = useState(true);
@@ -126,16 +127,16 @@ export default function ListingDetailScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.muted}>Loading…</Text>
+      <View style={[styles.center, { backgroundColor: palette.background }]}>
+        <Text style={{ color: palette.muted }}>Loading…</Text>
       </View>
     );
   }
 
   if (!listing) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.error}>{loadError ?? 'Listing not found.'}</Text>
+      <View style={[styles.center, { backgroundColor: palette.background }]}>
+        <Text style={{ color: palette.danger }}>{loadError ?? 'Listing not found.'}</Text>
       </View>
     );
   }
@@ -144,30 +145,39 @@ export default function ListingDetailScreen() {
   const outOfStock = listing.quantity <= 0;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.brand}>{listing.brandName}</Text>
-      <Text style={styles.generic}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: palette.background }]}
+      contentContainerStyle={styles.content}
+    >
+      <Text style={[styles.brand, { color: palette.ink }]}>{listing.brandName}</Text>
+      <Text style={[styles.generic, { color: palette.muted }]}>
         {listing.genericName} · {listing.strength} · {listing.packSize}
       </Text>
-      {listing.prescriptionRequired ? <Text style={styles.rx}>Prescription required</Text> : null}
+      {listing.prescriptionRequired ? (
+        <Text style={[styles.rx, { backgroundColor: palette.accent }]}>Prescription required</Text>
+      ) : null}
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{displayPharmacy?.name ?? 'Pharmacy'}</Text>
+      <View style={[styles.card, { backgroundColor: palette.card }]}>
+        <Text style={[styles.cardTitle, { color: palette.ink }]}>
+          {displayPharmacy?.name ?? 'Pharmacy'}
+        </Text>
         {displayPharmacy ? (
-          <Text style={styles.muted}>
+          <Text style={[styles.muted, { color: palette.muted }]}>
             PCN {displayPharmacy.pcnLicenseNumber} · ★ {displayPharmacy.ratingAvg.toFixed(1)} (
             {displayPharmacy.reviewCount})
           </Text>
         ) : null}
-        <Text style={styles.price}>{formatNaira(listing.priceKobo)}</Text>
-        <Text style={styles.muted}>
+        <Text style={[styles.price, { color: palette.ink }]}>{formatNaira(listing.priceKobo)}</Text>
+        <Text style={[styles.muted, { color: palette.muted }]}>
           {listing.distanceKm != null ? `${listing.distanceKm.toFixed(1)} km away · ` : ''}
           {outOfStock ? 'Out of stock' : `${listing.quantity} in stock`}
         </Text>
-        {listing.nafdacNumber ? <Text style={styles.muted}>NAFDAC {listing.nafdacNumber}</Text> : null}
+        {listing.nafdacNumber ? (
+          <Text style={[styles.muted, { color: palette.muted }]}>NAFDAC {listing.nafdacNumber}</Text>
+        ) : null}
         <View style={styles.row}>
           <Pressable
-            style={styles.secondaryButton}
+            style={[styles.secondaryButton, { borderColor: palette.brand }]}
             onPress={() =>
               openConsult({
                 drug: `${listing.brandName} (${listing.genericName})`,
@@ -175,32 +185,38 @@ export default function ListingDetailScreen() {
               })
             }
           >
-            <Text style={styles.secondaryText}>Ask about this</Text>
+            <Text style={[styles.secondaryText, { color: palette.brand }]}>Ask about this</Text>
           </Pressable>
           {displayPharmacy?.phoneE164 ? (
-            <Pressable style={styles.secondaryButton} onPress={handleCall}>
-              <Text style={styles.secondaryText}>Call</Text>
+            <Pressable style={[styles.secondaryButton, { borderColor: palette.brand }]} onPress={handleCall}>
+              <Text style={[styles.secondaryText, { color: palette.brand }]}>Call</Text>
             </Pressable>
           ) : null}
         </View>
       </View>
 
       {placedId ? (
-        <View style={styles.success}>
-          <Text style={styles.successTitle}>Order placed for pickup</Text>
-          <Text style={styles.successBody}>Show this at {displayPharmacy?.name ?? 'the pharmacy'}.</Text>
-          <Text style={styles.successBody}>Order {placedId.slice(0, 8)}…</Text>
+        <View style={[styles.success, { backgroundColor: palette.card, borderLeftColor: palette.brand }]}>
+          <Text style={[styles.successTitle, { color: palette.brandDark }]}>Order placed for pickup</Text>
+          <Text style={[styles.successBody, { color: palette.muted }]}>
+            Show this at {displayPharmacy?.name ?? 'the pharmacy'}.
+          </Text>
+          <Text style={[styles.successBody, { color: palette.muted }]}>Order {placedId.slice(0, 8)}…</Text>
         </View>
       ) : (
         <>
           {!auth.user ? (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Sign in to buy</Text>
+            <View style={[styles.card, { backgroundColor: palette.card }]}>
+              <Text style={[styles.cardTitle, { color: palette.ink }]}>Sign in to buy</Text>
               <AuthForm />
             </View>
           ) : null}
           <Pressable
-            style={[styles.buyButton, (!auth.user || outOfStock || placing) && styles.disabled]}
+            style={[
+              styles.buyButton,
+              { backgroundColor: palette.brand },
+              (!auth.user || outOfStock || placing) && styles.disabled,
+            ]}
             onPress={handleBuy}
             disabled={!auth.user || outOfStock || placing}
           >
@@ -208,7 +224,9 @@ export default function ListingDetailScreen() {
               {outOfStock ? 'Out of stock' : placing ? 'Placing order…' : `Buy now · ${formatNaira(listing.priceKobo)}`}
             </Text>
           </Pressable>
-          {orders.error ? <Text style={styles.error}>{orders.error}</Text> : null}
+          {orders.error ? (
+            <Text style={[styles.error, { color: palette.danger }]}>{orders.error}</Text>
+          ) : null}
         </>
       )}
     </ScrollView>
@@ -218,7 +236,6 @@ export default function ListingDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface,
   },
   content: {
     padding: 16,
@@ -226,7 +243,6 @@ const styles = StyleSheet.create({
   },
   center: {
     flex: 1,
-    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -234,11 +250,9 @@ const styles = StyleSheet.create({
   brand: {
     fontSize: 24,
     fontWeight: '800',
-    color: colors.ink,
   },
   generic: {
     fontSize: 14,
-    color: colors.muted,
     marginTop: 4,
   },
   rx: {
@@ -246,15 +260,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 12,
     fontWeight: '700',
-    color: colors.white,
-    backgroundColor: colors.accent,
+    color: '#FFFFFF',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 4,
     overflow: 'hidden',
   },
   card: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 16,
     marginTop: 16,
@@ -262,17 +274,14 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.ink,
   },
   price: {
     fontSize: 22,
     fontWeight: '800',
-    color: colors.ink,
     marginTop: 8,
   },
   muted: {
     fontSize: 13,
-    color: colors.muted,
     marginTop: 4,
   },
   row: {
@@ -283,18 +292,15 @@ const styles = StyleSheet.create({
   secondaryButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: colors.brand,
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',
   },
   secondaryText: {
-    color: colors.brand,
     fontWeight: '700',
     fontSize: 14,
   },
   buyButton: {
-    backgroundColor: colors.brand,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -304,30 +310,25 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   buyText: {
-    color: colors.white,
+    color: '#FFFFFF',
     fontWeight: '800',
     fontSize: 16,
   },
   error: {
     marginTop: 8,
-    color: colors.danger,
   },
   success: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 16,
     marginTop: 16,
     borderLeftWidth: 4,
-    borderLeftColor: colors.brand,
   },
   successTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: colors.brandDark,
   },
   successBody: {
     fontSize: 13,
-    color: colors.muted,
     marginTop: 4,
   },
 });

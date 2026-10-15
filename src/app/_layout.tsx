@@ -16,6 +16,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="index" options={{ title: 'MedRun' }} />
         <Stack.Screen name="consult" options={{ title: 'Ask a Pharmacist' }} />
+        <Stack.Screen name="listing/[id]" options={{ title: 'Medicine' }} />
       </Stack>
       <AskPharmacistButton />
       <StatusBar style="light" />

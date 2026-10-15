@@ -1,4 +1,5 @@
 import * as Location from 'expo-location';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { env, isSupabaseConfigured } from '../core/config/env';
@@ -16,6 +17,7 @@ import { useConsultSheet } from '../presentation/providers/consultSheetContext';
 const LAGOS_FALLBACK: GeoCoordinate = { latitude: 6.5244, longitude: 3.3792 };
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { openConsult } = useConsultSheet();
   const auth = useAuth();
   const catalog = useCatalog();
@@ -69,6 +71,10 @@ export default function HomeScreen() {
       ? 'Searching pharmacies near you…'
       : `No matches within ${env.searchRadiusKm} km. Try another spelling or the generic name.`;
 
+  function handleOpen(listing: InventoryListing) {
+    router.push({ pathname: '/listing/[id]', params: { id: listing.id } });
+  }
+
   function handleAsk(listing: InventoryListing) {
     openConsult({
       drug: `${listing.brandName} (${listing.genericName})`,
@@ -113,7 +119,12 @@ export default function HomeScreen() {
         data={catalog.listings}
         keyExtractor={(listing) => listing.id}
         renderItem={({ item }) => (
-          <ListingCard listing={item} pharmacy={pharmacyById.get(item.pharmacyId)} onAsk={handleAsk} />
+          <ListingCard
+            listing={item}
+            pharmacy={pharmacyById.get(item.pharmacyId)}
+            onAsk={handleAsk}
+            onOpen={handleOpen}
+          />
         )}
         ListEmptyComponent={
           <Text style={styles.empty}>{emptyMessage}</Text>

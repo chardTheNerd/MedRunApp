@@ -8,11 +8,12 @@ type ListingCardProps = {
   listing: InventoryListing;
   pharmacy?: Pharmacy;
   onAsk: (listing: InventoryListing) => void;
+  onOpen: (listing: InventoryListing) => void;
 };
 
-export function ListingCard({ listing, pharmacy, onAsk }: ListingCardProps) {
+export function ListingCard({ listing, pharmacy, onAsk, onOpen }: ListingCardProps) {
   return (
-    <View style={styles.card}>
+    <Pressable onPress={() => onOpen(listing)} style={styles.card}>
       <View style={styles.header}>
         <View style={styles.titles}>
           <Text style={styles.brand}>{listing.brandName}</Text>
@@ -47,7 +48,7 @@ export function ListingCard({ listing, pharmacy, onAsk }: ListingCardProps) {
           <Text style={styles.askText}>Ask about this</Text>
         </Pressable>
       </View>
-    </View>
+    </Pressable>
   );
 }
 

@@ -62,6 +62,13 @@ export default function HomeScreen() {
     await catalog.searchPharmacies({ center, radiusKm: env.searchRadiusKm });
   }
 
+  const signedIn = auth.status === 'authenticated';
+  const emptyMessage = !signedIn
+    ? 'Sign in below to search nearby pharmacies.'
+    : catalog.loading
+      ? 'Searching pharmacies near you…'
+      : `No matches within ${env.searchRadiusKm} km. Try another spelling or the generic name.`;
+
   function handleAsk(listing: InventoryListing) {
     openConsult({
       drug: `${listing.brandName} (${listing.genericName})`,
@@ -87,9 +94,9 @@ export default function HomeScreen() {
           editable={!catalog.loading}
         />
         <Pressable
-          style={[styles.searchButton, (!query.trim() || !center) && styles.buttonDisabled]}
+          style={[styles.searchButton, (!query.trim() || !center || !signedIn) && styles.buttonDisabled]}
           onPress={handleSearch}
-          disabled={!query.trim() || !center}
+          disabled={!query.trim() || !center || !signedIn}
         >
           <Text style={styles.searchButtonText}>
             {catalog.loading ? 'Searching…' : locating ? 'Locating…' : 'Search nearby'}
@@ -109,11 +116,7 @@ export default function HomeScreen() {
           <ListingCard listing={item} pharmacy={pharmacyById.get(item.pharmacyId)} onAsk={handleAsk} />
         )}
         ListEmptyComponent={
-          <Text style={styles.empty}>
-            {catalog.loading
-              ? 'Searching pharmacies near you…'
-              : 'No results yet. Type a drug name above and search.'}
-          </Text>
+          <Text style={styles.empty}>{emptyMessage}</Text>
         }
         ListFooterComponent={
           <View style={styles.account}>

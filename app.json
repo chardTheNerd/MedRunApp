@@ -36,7 +36,15 @@
       "defaultCurrency": "NGN",
       "defaultLocale": "en-NG",
       "defaultTimezone": "Africa/Lagos"
-    }
-    
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "MedRun needs your location to find nearby pharmacies that have your medicines in stock."
+        }
+      ]
+    ]
   }
 }

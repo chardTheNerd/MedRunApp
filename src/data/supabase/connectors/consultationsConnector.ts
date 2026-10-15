@@ -53,6 +53,17 @@ export async function listConsultationsForPatient(patientId: string): Promise<Co
   return ((data ?? []) as ConsultationRow[]).map(consultationFromRow);
 }
 
+export async function listConsultationMessages(consultationId: string): Promise<ConsultationMessage[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from(TABLES.consultationMessages)
+    .select('*')
+    .eq('consultation_id', consultationId)
+    .order('created_at', { ascending: true });
+  throwIfError(error);
+  return ((data ?? []) as ConsultationMessageRow[]).map(messageFromRow);
+}
+
 export async function sendConsultationMessage(
   consultationId: string,
   senderId: string,

@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useMemo, useReducer } from 'react';
-import { container } from '../../app/di/container';
+import { container } from '../../di/container';
 import { Order } from '../../domain/entities/Order';
 import { PlaceOrderInput } from '../../domain/repositories/OrderRepository';
 

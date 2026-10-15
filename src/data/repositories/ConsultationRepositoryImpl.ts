@@ -6,6 +6,7 @@ import {
 } from '../../domain/repositories/ConsultationRepository';
 import {
   getConsultationById,
+  listConsultationMessages,
   listConsultationsForPatient,
   requestConsultation,
   sendConsultationMessage,
@@ -23,6 +24,10 @@ export class ConsultationRepositoryImpl implements ConsultationRepository {
 
   listForPatient(patientId: string): Promise<Result<Consultation[]>> {
     return wrap(() => listConsultationsForPatient(patientId));
+  }
+
+  listMessages(consultationId: string): Promise<Result<ConsultationMessage[]>> {
+    return wrap(() => listConsultationMessages(consultationId));
   }
 
   sendMessage(

@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
-import { container } from '../../app/di/container';
+import { container } from '../../di/container';
 import { isSupabaseConfigured } from '../../core/config/env';
 import { User } from '../../domain/entities/User';
 

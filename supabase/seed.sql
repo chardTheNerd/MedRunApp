@@ -330,7 +330,7 @@ begin
     created_at, updated_at
   )
   select
-    d.id, d.pharmacy_id, reviewers[d.slot], d.author_name, d.rating, d.comment,
+    d.id::uuid, d.pharmacy_id::uuid, reviewers[d.slot], d.author_name, d.rating, d.comment,
     now() - make_interval(days => d.days_ago),
     now() - make_interval(days => d.days_ago)
   from (values

@@ -83,23 +83,13 @@ export async function signInWithEmail(email: string, password: string): Promise<
   const supabase = getSupabase();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    // "Invalid login credentials" can mean either wrong password OR
-    // unconfirmed email — Supabase deliberately returns the same code
-    // to avoid leaking which accounts exist. Probe the user by trying
-    // to resend the signup email: if it succeeds, the account is
-    // unconfirmed (route to /auth/check-email); if it fails with
-    // "user not found", the password is wrong (let the error bubble).
+    // Only `email_not_confirmed` is unambiguous. `invalid_credentials` is
+    // returned for both wrong password AND unconfirmed email by design
+    // (Supabase deliberately conflates them to avoid leaking which
+    // accounts exist), so we let it surface as the standard
+    // "Incorrect email or password" error.
     if (error.code === 'email_not_confirmed') {
       return { status: 'check-email', email };
-    }
-    if (error.code === 'invalid_credentials') {
-      const probe = await supabase.auth.resend({ type: 'signup', email }).then(
-        () => true,
-        () => false,
-      );
-      if (probe) {
-        return { status: 'check-email', email };
-      }
     }
     throw mapAuthError(error);
   }

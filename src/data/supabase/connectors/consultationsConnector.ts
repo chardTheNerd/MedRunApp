@@ -53,6 +53,22 @@ export async function listConsultationsForPatient(patientId: string): Promise<Co
   return ((data ?? []) as ConsultationRow[]).map(consultationFromRow);
 }
 
+/**
+ * Consultations scoped to a pharmacy ("Ask a pharmacist" chats). Requires
+ * supabase/migrations/0003_staff_consult_access.sql for non-consultant
+ * staff; patients/consultants keep working through the participant policy.
+ */
+export async function listConsultationsForPharmacy(pharmacyId: string): Promise<Consultation[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from(TABLES.consultations)
+    .select('*')
+    .eq('pharmacy_id', pharmacyId)
+    .order('created_at', { ascending: false });
+  throwIfError(error);
+  return ((data ?? []) as ConsultationRow[]).map(consultationFromRow);
+}
+
 export async function listConsultationMessages(consultationId: string): Promise<ConsultationMessage[]> {
   const supabase = getSupabase();
   const { data, error } = await supabase

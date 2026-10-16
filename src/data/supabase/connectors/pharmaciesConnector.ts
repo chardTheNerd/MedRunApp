@@ -82,6 +82,44 @@ export async function searchNearbyPharmacies(
     .filter((pharmacy) => distanceKm(center, pharmacy.location) <= radiusKm);
 }
 
+/**
+ * Pharmacies the user can manage: owned (owner_id) plus membership rows in
+ * pharmacy_staff. Used by the staff dashboard to resolve "my pharmacies".
+ */
+export async function listStaffPharmacies(userId: string): Promise<Pharmacy[]> {
+  const supabase = getSupabase();
+  const { data: owned, error: ownedError } = await supabase
+    .from(TABLES.pharmacies)
+    .select('*')
+    .eq('owner_id', userId);
+  throwIfError(ownedError);
+
+  const { data: memberships, error: memberError } = await supabase
+    .from(TABLES.pharmacyStaff)
+    .select('pharmacy_id')
+    .eq('user_id', userId);
+  throwIfError(memberError);
+
+  const memberIds = ((memberships ?? []) as { pharmacy_id: string }[]).map(
+    (row) => row.pharmacy_id,
+  );
+  let memberPharmacies: PharmacyRow[] = [];
+  if (memberIds.length > 0) {
+    const { data, error } = await supabase
+      .from(TABLES.pharmacies)
+      .select('*')
+      .in('id', memberIds);
+    throwIfError(error);
+    memberPharmacies = (data ?? []) as PharmacyRow[];
+  }
+
+  const merged = new Map<string, PharmacyRow>();
+  for (const row of [...((owned ?? []) as PharmacyRow[]), ...memberPharmacies]) {
+    merged.set(row.id, row);
+  }
+  return [...merged.values()].map(pharmacyFromRow);
+}
+
 export async function addPharmacyStaff(staff: PharmacyStaff): Promise<void> {
   const supabase = getSupabase();
   const { error } = await supabase.from(TABLES.pharmacyStaff).upsert(

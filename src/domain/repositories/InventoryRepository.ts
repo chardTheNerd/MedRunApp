@@ -15,7 +15,7 @@ export interface InventoryRepository {
   searchNearby(query: NearbyListingQuery): Promise<Result<InventoryListing[]>>;
   listByPharmacy(pharmacyId: string): Promise<Result<InventoryListing[]>>;
   upsertListing(
-    listing: Omit<InventoryListing, 'id' | 'updatedAt' | 'distanceKm'>,
+    listing: Omit<InventoryListing, 'id' | 'updatedAt' | 'distanceKm'> & { id?: string },
   ): Promise<Result<InventoryListing>>;
   getMedicine(medicineId: string): Promise<Result<Medicine>>;
   upsertMedicine(medicine: Omit<Medicine, 'id' | 'createdAt' | 'updatedAt'>): Promise<Result<Medicine>>;

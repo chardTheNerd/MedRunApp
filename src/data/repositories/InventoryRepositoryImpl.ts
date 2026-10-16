@@ -21,7 +21,7 @@ export class InventoryRepositoryImpl implements InventoryRepository {
   }
 
   upsertListing(
-    listing: Omit<InventoryListing, 'id' | 'updatedAt' | 'distanceKm'>,
+    listing: Omit<InventoryListing, 'id' | 'updatedAt' | 'distanceKm'> & { id?: string },
   ): Promise<Result<InventoryListing>> {
     return wrap(() => upsertListing(listing));
   }

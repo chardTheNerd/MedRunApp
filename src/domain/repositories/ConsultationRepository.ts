@@ -10,6 +10,7 @@ export interface ConsultationRepository {
   request(input: RequestConsultationInput): Promise<Result<Consultation>>;
   getById(consultationId: string): Promise<Result<Consultation>>;
   listForPatient(patientId: string): Promise<Result<Consultation[]>>;
+  listForPharmacy(pharmacyId: string): Promise<Result<Consultation[]>>;
   listMessages(consultationId: string): Promise<Result<ConsultationMessage[]>>;
   sendMessage(
     consultationId: string,

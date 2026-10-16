@@ -9,9 +9,10 @@ type ListingCardProps = {
   pharmacy?: Pharmacy;
   onAsk: (listing: InventoryListing) => void;
   onOpen: (listing: InventoryListing) => void;
+  onPharmacy?: (pharmacyId: string) => void;
 };
 
-export function ListingCard({ listing, pharmacy, onAsk, onOpen }: ListingCardProps) {
+export function ListingCard({ listing, pharmacy, onAsk, onOpen, onPharmacy }: ListingCardProps) {
   const { palette } = useTheme();
   return (
     <Pressable
@@ -30,7 +31,13 @@ export function ListingCard({ listing, pharmacy, onAsk, onOpen }: ListingCardPro
         ) : null}
       </View>
 
-      <Text style={[styles.pharmacy, { color: palette.brandDark }]}>{pharmacy?.name ?? 'Pharmacy'}</Text>
+      <Pressable
+        onPress={() => (pharmacy && onPharmacy ? onPharmacy(pharmacy.id) : onOpen(listing))}
+      >
+        <Text style={[styles.pharmacy, { color: palette.brandDark }]}>
+          {pharmacy?.name ?? 'Pharmacy'}
+        </Text>
+      </Pressable>
       {pharmacy ? (
         <Text style={[styles.meta, { color: palette.muted }]}>
           PCN {pharmacy.pcnLicenseNumber} · ★ {pharmacy.ratingAvg.toFixed(1)} ({pharmacy.reviewCount})

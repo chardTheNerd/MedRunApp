@@ -22,6 +22,12 @@ function ThemedStack() {
         <Stack.Screen name="index" options={{ title: 'MedRun' }} />
         <Stack.Screen name="consult" options={{ title: 'Ask a Pharmacist' }} />
         <Stack.Screen name="listing/[id]" options={{ title: 'Medicine' }} />
+        <Stack.Screen name="orders" options={{ title: 'My Orders' }} />
+        <Stack.Screen name="pharmacy/[id]" options={{ title: 'Pharmacy' }} />
+        <Stack.Screen name="staff/index" options={{ title: 'Staff' }} />
+        <Stack.Screen name="staff/inventory" options={{ title: 'Inventory' }} />
+        <Stack.Screen name="staff/orders" options={{ title: 'Incoming orders' }} />
+        <Stack.Screen name="staff/consults" options={{ title: 'Patient chats' }} />
       </Stack>
       <AskPharmacistButton />
       <StatusBar style={effective === 'dark' ? 'light' : 'dark'} />

@@ -8,6 +8,7 @@ import {
   getConsultationById,
   listConsultationMessages,
   listConsultationsForPatient,
+  listConsultationsForPharmacy,
   requestConsultation,
   sendConsultationMessage,
 } from '../supabase/connectors/consultationsConnector';
@@ -24,6 +25,10 @@ export class ConsultationRepositoryImpl implements ConsultationRepository {
 
   listForPatient(patientId: string): Promise<Result<Consultation[]>> {
     return wrap(() => listConsultationsForPatient(patientId));
+  }
+
+  listForPharmacy(pharmacyId: string): Promise<Result<Consultation[]>> {
+    return wrap(() => listConsultationsForPharmacy(pharmacyId));
   }
 
   listMessages(consultationId: string): Promise<Result<ConsultationMessage[]>> {

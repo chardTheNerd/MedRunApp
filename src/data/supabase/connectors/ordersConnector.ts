@@ -2,67 +2,62 @@ import { AppError } from '../../../core/errors/AppError';
 import { Order, OrderStatus } from '../../../domain/entities/Order';
 import { PlaceOrderInput } from '../../../domain/repositories/OrderRepository';
 import { getSupabase } from '../SupabaseClient';
-import { toNumber } from '../coerce';
-import { throwIfError } from '../errors';
+import { throwIfError, toAppError } from '../errors';
 import { orderFromRow } from '../mappers';
-import { ListingRow, OrderRow } from '../rows';
+import { OrderRow } from '../rows';
 import { TABLES } from '../tables';
 
+/**
+ * Atomic checkout: one `place_order` rpc locks each listing row (FOR UPDATE),
+ * validates, decrements, inserts the order, and returns it — all in a single
+ * transaction, so concurrent checkouts on the last pack serialize instead
+ * of overselling. Requires supabase/migrations/0002_place_order_function.sql
+ * to have been run in the project.
+ */
 export async function placeOrder(input: PlaceOrderInput): Promise<Order> {
   const supabase = getSupabase();
-  const now = new Date().toISOString();
 
-  // Sequential stock check + decrement. For true atomicity under
-  // concurrency, replace with a `place_order` Postgres function via rpc.
-  for (const item of input.items) {
-    const { data, error } = await supabase
-      .from(TABLES.listings)
-      .select('*')
-      .eq('id', item.listingId)
-      .maybeSingle();
-    throwIfError(error);
-    if (!data) {
-      throw new AppError('not-found', `Listing ${item.listingId} was not found.`);
-    }
-    const listing = data as ListingRow;
-    const availableQty = toNumber(listing.quantity);
-    if (listing.pharmacy_id !== input.pharmacyId) {
-      throw new AppError('validation', 'Every item must belong to the same pharmacy.');
-    }
-    if (!listing.is_available || availableQty < item.quantity) {
-      throw new AppError('conflict', `${listing.brand_name} is out of stock.`);
-    }
-    const nextQty = availableQty - item.quantity;
-    const { error: updateError } = await supabase
-      .from(TABLES.listings)
-      .update({ quantity: nextQty, is_available: nextQty > 0, updated_at: now })
-      .eq('id', item.listingId);
-    throwIfError(updateError);
-  }
-
-  const { data, error } = await supabase
-    .from(TABLES.orders)
-    .insert({
-      patient_id: input.patientId,
-      pharmacy_id: input.pharmacyId,
+  const { data, error } = await supabase.rpc('place_order', {
+    p_order: {
+      patientId: input.patientId,
+      pharmacyId: input.pharmacyId,
       items: input.items,
-      subtotal_kobo: input.subtotalKobo,
-      delivery_fee_kobo: input.deliveryFeeKobo,
-      total_kobo: input.totalKobo,
+      subtotalKobo: input.subtotalKobo,
+      deliveryFeeKobo: input.deliveryFeeKobo,
+      totalKobo: input.totalKobo,
       currency: 'NGN',
       fulfillment: input.fulfillment,
-      delivery_address: input.deliveryAddress,
+      deliveryAddress: input.deliveryAddress,
       status: input.status ?? 'pending',
       payment: input.payment,
       notes: input.notes,
-      created_at: now,
-      updated_at: now,
-    })
-    .select('id')
-    .single();
-  throwIfError(error);
+    },
+  });
+  if (error) {
+    throw mapRpcError(error);
+  }
+  return orderFromRow(data as OrderRow);
+}
 
-  return getOrderById((data as { id: string }).id);
+/**
+ * The `place_order` function raises EXCEPTIONs with a machine-readable
+ * prefix (see the migration). Map those to the matching AppError code so
+ * the UI keeps showing the same friendly messages as before.
+ */
+function mapRpcError(error: { message: string; code?: string; status?: number }): AppError {
+  const msg = error.message ?? '';
+  if (msg.includes('PLACE_ORDER_CONFLICT:')) {
+    const detail = msg.split('PLACE_ORDER_CONFLICT:')[1]?.trim() || 'Out of stock.';
+    return new AppError(detail.endsWith('was not found.') ? 'not-found' : 'conflict', detail, error);
+  }
+  if (msg.includes('PLACE_ORDER_VALIDATION:')) {
+    const detail = msg.split('PLACE_ORDER_VALIDATION:')[1]?.trim() || 'Invalid order.';
+    return new AppError('validation', detail, error);
+  }
+  if (msg.includes('PLACE_ORDER_FORBIDDEN:')) {
+    return new AppError('permission-denied', 'You can only place orders for yourself.', error);
+  }
+  return toAppError(error);
 }
 
 export async function getOrderById(orderId: string): Promise<Order> {

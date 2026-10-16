@@ -6,6 +6,7 @@ import {
   addPharmacyStaff,
   createPharmacy,
   getPharmacyById,
+  listStaffPharmacies,
   searchNearbyPharmacies,
 } from '../supabase/connectors/pharmaciesConnector';
 import { wrap } from '../supabase/wrap';
@@ -13,6 +14,10 @@ import { wrap } from '../supabase/wrap';
 export class PharmacyRepositoryImpl implements PharmacyRepository {
   getById(pharmacyId: string): Promise<Result<Pharmacy>> {
     return wrap(() => getPharmacyById(pharmacyId));
+  }
+
+  listStaffPharmacies(userId: string): Promise<Result<Pharmacy[]>> {
+    return wrap(() => listStaffPharmacies(userId));
   }
 
   searchNearby(center: GeoCoordinate, radiusKm: number): Promise<Result<Pharmacy[]>> {

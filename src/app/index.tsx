@@ -83,6 +83,10 @@ export default function HomeScreen() {
     });
   }
 
+  function handlePharmacy(pharmacyId: string) {
+    router.push({ pathname: '/pharmacy/[id]', params: { id: pharmacyId } });
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: palette.background }]}>
       <View style={[styles.searchSection, { backgroundColor: palette.brand }]}>
@@ -142,6 +146,7 @@ export default function HomeScreen() {
             pharmacy={pharmacyById.get(item.pharmacyId)}
             onAsk={handleAsk}
             onOpen={handleOpen}
+            onPharmacy={handlePharmacy}
           />
         )}
         ListEmptyComponent={
@@ -151,6 +156,28 @@ export default function HomeScreen() {
           <View style={[styles.account, { backgroundColor: palette.card }]}>
             <Text style={[styles.accountTitle, { color: palette.ink }]}>Account</Text>
             <AuthForm />
+            {signedIn ? (
+              <>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="View my orders"
+                  onPress={() => router.push('/orders')}
+                  style={[styles.ordersButton, { backgroundColor: palette.brand }]}
+                >
+                  <Text style={styles.ordersButtonText}>View my orders</Text>
+                </Pressable>
+                {auth.user?.role !== 'patient' ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Open staff dashboard"
+                    onPress={() => router.push('/staff')}
+                    style={[styles.ordersButton, { backgroundColor: palette.brandDark }]}
+                  >
+                    <Text style={styles.ordersButtonText}>Staff dashboard</Text>
+                  </Pressable>
+                ) : null}
+              </>
+            ) : null}
             <Text style={[styles.coverage, { color: palette.muted }]}>
               Coverage: {NIGERIAN_STATES.length} states including FCT ·{' '}
               {auth.status === 'authenticated' ? `Signed in as ${auth.user?.displayName}` : 'Signed out'}
@@ -246,6 +273,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     marginBottom: 8,
+  },
+  ordersButton: {
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  ordersButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 14,
   },
   coverage: {
     fontSize: 12,

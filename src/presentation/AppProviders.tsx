@@ -4,6 +4,7 @@ import { CatalogProvider } from './providers/CatalogProvider';
 import { ConsultationProvider } from './providers/ConsultationProvider';
 import { ConsultSheetProvider } from './providers/ConsultSheetProvider';
 import { OrderProvider } from './providers/OrderProvider';
+import { StaffProvider } from './providers/StaffProvider';
 import { ThemeProvider } from './providers/ThemeProvider';
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
@@ -13,7 +14,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         <CatalogProvider>
           <OrderProvider>
             <ConsultationProvider>
-              <ConsultSheetProvider>{children}</ConsultSheetProvider>
+              <StaffProvider>
+                <ConsultSheetProvider>{children}</ConsultSheetProvider>
+              </StaffProvider>
             </ConsultationProvider>
           </OrderProvider>
         </CatalogProvider>

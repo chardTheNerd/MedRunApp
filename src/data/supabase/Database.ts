@@ -16,7 +16,12 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      place_order: {
+        Args: { p_order: Record<string, any> };
+        Returns: Record<string, any>;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

@@ -1,6 +1,7 @@
 -- MedRun dev seed: sample pharmacies, medicines, and listings in Lagos.
 --
--- Run AFTER supabase/migrations/0001_initial_schema.sql, in the Supabase
+-- Run AFTER supabase/migrations/0001_initial_schema.sql AND
+-- supabase/migrations/0004_pharmacy_reviews.sql, in the Supabase
 -- Dashboard: SQL Editor -> New query -> paste -> Run (runs as postgres,
 -- which bypasses RLS). Safe to re-run: inserts are idempotent on fixed ids.
 --
@@ -13,6 +14,7 @@
 --   select count(*) from public.pharmacies;   -- expect 4
 --   select count(*) from public.medicines;    -- expect 10
 --   select count(*) from public.listings where is_available;  -- expect 13
+--   select count(*) from public.pharmacy_reviews;  -- expect 9
 --
 -- All names, licence numbers, and phone numbers below are fictional sample
 -- data for development only.
@@ -20,6 +22,7 @@
 do $$
 declare
   seed_owner uuid;
+  reviewers uuid[];
 begin
   select u.id into seed_owner from public.users u order by u.created_at limit 1;
   if seed_owner is null then
@@ -302,9 +305,113 @@ begin
     city = excluded.city,
     is_available = excluded.is_available,
     updated_at = now();
+
+  -- ============ Pharmacy reviews ============
+  -- Fictional sample reviews for development only. patient_id references
+  -- public.users, so the synthetic reviewers below are inserted as user rows
+  -- first (fixed ids keep re-runs idempotent). The seed owner writes one
+  -- review per pharmacy; each synthetic reviewer writes at most one review
+  -- per pharmacy to respect the (pharmacy_id, patient_id) unique pair.
+  -- The refresh_pharmacy_rating trigger recomputes rating_avg/review_count
+  -- on insert, so the static seed values above get replaced by these.
+
+  reviewers := array[
+    'e1111111-1111-4111-8111-111111111111',
+    'e2222222-2222-4222-8222-222222222222',
+    'e3333333-3333-4333-8333-333333333333',
+    'e4444444-4444-4444-8444-444444444444',
+    'e5555555-5555-4555-8555-555555555555'
+  ];
+
+  insert into public.users (id, role, display_name, email, locale, addresses)
+  values
+    (reviewers[1], 'patient', 'Tunde B.', 'tunde.b.seed@example.ng', 'en-NG', '[]'),
+    (reviewers[2], 'patient', 'Fatima S.', 'fatima.s.seed@example.ng', 'en-NG', '[]'),
+    (reviewers[3], 'patient', 'Chinedu E.', 'chinedu.e.seed@example.ng', 'en-NG', '[]'),
+    (reviewers[4], 'patient', 'Aisha M.', 'aisha.m.seed@example.ng', 'en-NG', '[]'),
+    (reviewers[5], 'patient', 'Emeka N.', 'emeka.n.seed@example.ng', 'en-NG', '[]')
+  on conflict (id) do update set
+    display_name = excluded.display_name,
+    updated_at = now();
+
+  insert into public.pharmacy_reviews (
+    id, pharmacy_id, patient_id, author_name, rating, comment,
+    created_at, updated_at
+  ) values
+  -- Lifecare Pharmacy Yaba: 5, 4, 5 -> avg 4.7, count 3.
+  (
+    'd1111111-1111-4111-8111-111111111111',
+    'a1111111-1111-4111-8111-111111111111', seed_owner,
+    'Adaeze O.', 5, 'Fast service and the pharmacist explained the dosage clearly.',
+    now() - interval '12 days', now() - interval '12 days'
+  ),
+  (
+    'd1111111-1111-4111-8111-111111111112',
+    'a1111111-1111-4111-8111-111111111111', reviewers[1],
+    'Tunde B.', 4, 'Good stock of antimalarials. Queue was a bit long on Saturday.',
+    now() - interval '9 days', now() - interval '9 days'
+  ),
+  (
+    'd1111111-1111-4111-8111-111111111113',
+    'a1111111-1111-4111-8111-111111111111', reviewers[2],
+    'Fatima S.', 5, 'They confirmed my prescription on the phone before I came. Very professional.',
+    now() - interval '4 days', now() - interval '4 days'
+  ),
+  -- Wellness Point Pharmacy Ikeja: 4, 4, 3 -> avg 3.7, count 3.
+  (
+    'd2222222-2222-4222-8222-222222222222',
+    'a2222222-2222-4222-8222-222222222222', seed_owner,
+    'Adaeze O.', 4, 'Found my inhaler here when two other pharmacies were out of stock.',
+    now() - interval '15 days', now() - interval '15 days'
+  ),
+  (
+    'd2222222-2222-4222-8222-222222222223',
+    'a2222222-2222-4222-8222-222222222222', reviewers[3],
+    'Chinedu E.', 4, 'Fair prices and quick pickup. Parking is tight though.',
+    now() - interval '7 days', now() - interval '7 days'
+  ),
+  (
+    'd2222222-2222-4222-8222-222222222224',
+    'a2222222-2222-4222-8222-222222222222', reviewers[4],
+    'Aisha M.', 3, 'Helpful staff, but delivery took a day longer than promised.',
+    now() - interval '2 days', now() - interval '2 days'
+  ),
+  -- Carehub Pharmacy Surulere: 5, 5 -> avg 5.0, count 2.
+  (
+    'd3333333-3333-4333-8333-333333333333',
+    'a3333333-3333-4333-8333-333333333333', seed_owner,
+    'Adaeze O.', 5, 'My go-to pharmacy. They always have children''s syrups in stock.',
+    now() - interval '20 days', now() - interval '20 days'
+  ),
+  (
+    'd3333333-3333-4333-8333-333333333334',
+    'a3333333-3333-4333-8333-333333333333', reviewers[5],
+    'Emeka N.', 5, 'Pharmacist took time to check my other medications for interactions.',
+    now() - interval '6 days', now() - interval '6 days'
+  ),
+  -- Island Meds Pharmacy Lekki: 4 -> avg 4.0, count 1.
+  (
+    'd4444444-4444-4444-8444-444444444444',
+    'a4444444-4444-4444-8444-444444444444', seed_owner,
+    'Adaeze O.', 4, 'Great late-night hours. Prices slightly higher than the mainland.',
+    now() - interval '11 days', now() - interval '11 days'
+  )
+  on conflict (id) do update set
+    rating = excluded.rating,
+    comment = excluded.comment,
+    updated_at = now();
 end $$;
 
 -- ============ Cleanup (run only to wipe the sample data) ============
+-- delete from public.pharmacy_reviews where pharmacy_id in (
+--   'a1111111-1111-4111-8111-111111111111', 'a2222222-2222-4222-8222-222222222222',
+--   'a3333333-3333-4333-8333-333333333333', 'a4444444-4444-4444-8444-444444444444'
+-- );
+-- delete from public.users where id in (
+--   'e1111111-1111-4111-8111-111111111111', 'e2222222-2222-4222-8222-222222222222',
+--   'e3333333-3333-4333-8333-333333333333', 'e4444444-4444-4444-8444-444444444444',
+--   'e5555555-5555-4555-8555-555555555555'
+-- );
 -- delete from public.listings where pharmacy_id in (
 --   'a1111111-1111-4111-8111-111111111111', 'a2222222-2222-4222-8222-222222222222',
 --   'a3333333-3333-4333-8333-333333333333', 'a4444444-4444-4444-8444-444444444444'

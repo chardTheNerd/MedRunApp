@@ -7,4 +7,5 @@ export const TABLES = {
   orders: 'orders',
   consultations: 'consultations',
   consultationMessages: 'consultation_messages',
+  pharmacyReviews: 'pharmacy_reviews',
 } as const;

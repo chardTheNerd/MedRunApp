@@ -3,8 +3,15 @@ import { InventoryListing } from '../../domain/entities/InventoryListing';
 import { Medicine } from '../../domain/entities/Medicine';
 import { Order } from '../../domain/entities/Order';
 import { Pharmacy } from '../../domain/entities/Pharmacy';
+import { NewPharmacyReview, PharmacyReview } from '../../domain/entities/PharmacyReview';
 import { DeliveryAddress, User } from '../../domain/entities/User';
-import { ConsultationMessageRow, ConsultationRow, OrderRow, PharmacyRow } from './rows';
+import {
+  ConsultationMessageRow,
+  ConsultationRow,
+  OrderRow,
+  PharmacyReviewRow,
+  PharmacyRow,
+} from './rows';
 import { toKobo, toNumber } from './coerce';
 
 /* ---------- Pharmacies ---------- */
@@ -158,5 +165,30 @@ export function messageFromRow(r: ConsultationMessageRow): ConsultationMessage {
     senderId: r.sender_id,
     body: r.body,
     createdAt: new Date(r.created_at),
+  };
+}
+
+/* ---------- Pharmacy reviews ---------- */
+
+export function pharmacyReviewFromRow(r: PharmacyReviewRow): PharmacyReview {
+  return {
+    id: r.id,
+    pharmacyId: r.pharmacy_id,
+    patientId: r.patient_id,
+    authorName: r.author_name,
+    rating: toNumber(r.rating, 5),
+    comment: r.comment,
+    createdAt: new Date(r.created_at),
+    updatedAt: new Date(r.updated_at),
+  };
+}
+
+export function newReviewToRow(input: NewPharmacyReview) {
+  return {
+    pharmacy_id: input.pharmacyId,
+    patient_id: input.patientId,
+    author_name: input.authorName,
+    rating: Math.min(5, Math.max(1, Math.round(input.rating))),
+    comment: input.comment,
   };
 }

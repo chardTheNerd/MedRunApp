@@ -3,6 +3,7 @@ import { ConsultationRepositoryImpl } from '../data/repositories/ConsultationRep
 import { InventoryRepositoryImpl } from '../data/repositories/InventoryRepositoryImpl';
 import { OrderRepositoryImpl } from '../data/repositories/OrderRepositoryImpl';
 import { PharmacyRepositoryImpl } from '../data/repositories/PharmacyRepositoryImpl';
+import { PharmacyReviewRepositoryImpl } from '../data/repositories/PharmacyReviewRepositoryImpl';
 import { UserRepositoryImpl } from '../data/repositories/UserRepositoryImpl';
 import { RegisterPatient } from '../domain/usecases/auth/RegisterPatient';
 import { SignInUser } from '../domain/usecases/auth/SignInUser';
@@ -17,6 +18,7 @@ const pharmacyRepository = new PharmacyRepositoryImpl();
 const inventoryRepository = new InventoryRepositoryImpl();
 const orderRepository = new OrderRepositoryImpl();
 const consultationRepository = new ConsultationRepositoryImpl();
+const pharmacyReviewRepository = new PharmacyReviewRepositoryImpl();
 
 export const container = {
   repositories: {
@@ -26,6 +28,7 @@ export const container = {
     inventory: inventoryRepository,
     orders: orderRepository,
     consultations: consultationRepository,
+    reviews: pharmacyReviewRepository,
   },
   usecases: {
     registerPatient: new RegisterPatient(authRepository),

@@ -1,11 +1,17 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { FlatList, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { directionsUrl } from '../../core/utils/maps';
 import { container } from '../../di/container';
 import { InventoryListing } from '../../domain/entities/InventoryListing';
 import { Pharmacy } from '../../domain/entities/Pharmacy';
+import { PharmacyReview } from '../../domain/entities/PharmacyReview';
+import { AuthForm } from '../../presentation/components/AuthForm';
 import { ListingCard } from '../../presentation/components/ListingCard';
 import { PharmacyAvatar } from '../../presentation/components/PharmacyAvatar';
+import { ReviewCard } from '../../presentation/components/ReviewCard';
+import { ReviewForm } from '../../presentation/components/ReviewForm';
+import { useAuth } from '../../presentation/providers/AuthProvider';
 import { useCatalog } from '../../presentation/providers/CatalogProvider';
 import { useConsultSheet } from '../../presentation/providers/consultSheetContext';
 import { useTheme } from '../../presentation/providers/ThemeProvider';
@@ -30,14 +36,29 @@ export default function PharmacyDetailScreen() {
   const params = useLocalSearchParams<{ id?: string; pharmacyId?: string }>();
   const pharmacyId = first(params.pharmacyId ?? params.id);
   const router = useRouter();
+  const auth = useAuth();
   const catalog = useCatalog();
   const { openConsult } = useConsultSheet();
   const { palette } = useTheme();
 
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
   const [listings, setListings] = useState<InventoryListing[]>([]);
+  const [reviews, setReviews] = useState<PharmacyReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [reviewsError, setReviewsError] = useState<string | null>(null);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+
+  async function loadReviews(id: string) {
+    const result = await container.repositories.reviews.listForPharmacy(id);
+    if (!result.ok) {
+      setReviewsError(result.error.message);
+      return;
+    }
+    setReviewsError(null);
+    setReviews(result.value);
+  }
 
   useEffect(() => {
     async function load() {
@@ -51,9 +72,10 @@ export default function PharmacyDetailScreen() {
       if (cached && cached.id === pharmacyId) {
         setPharmacy(cached);
       }
-      const [pharmacyResult, listingsResult] = await Promise.all([
+      const [pharmacyResult, listingsResult, reviewsResult] = await Promise.all([
         container.repositories.pharmacies.getById(pharmacyId),
         container.repositories.inventory.listByPharmacy(pharmacyId),
+        container.repositories.reviews.listForPharmacy(pharmacyId),
       ]);
       if (!pharmacyResult.ok) {
         if (!cached || cached.id !== pharmacyId) {
@@ -67,11 +89,45 @@ export default function PharmacyDetailScreen() {
       } else if (!listingsResult.ok && listings.length === 0) {
         setLoadError((prev) => prev ?? listingsResult.error.message);
       }
+      if (reviewsResult.ok) {
+        setReviews(reviewsResult.value);
+      } else {
+        setReviewsError(reviewsResult.error.message);
+      }
       setLoading(false);
     }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pharmacyId]);
+
+  async function handleSubmitReview(rating: number, comment: string): Promise<boolean> {
+    if (!auth.user || !pharmacyId) {
+      return false;
+    }
+    setSubmittingReview(true);
+    try {
+      const result = await container.repositories.reviews.submit({
+        pharmacyId,
+        patientId: auth.user.id,
+        authorName: auth.user.displayName,
+        rating,
+        comment,
+      });
+      if (!result.ok) {
+        setReviewsError(result.error.message);
+        return false;
+      }
+      setShowReviewForm(false);
+      await loadReviews(pharmacyId);
+      const refreshed = await container.repositories.pharmacies.getById(pharmacyId);
+      if (refreshed.ok) {
+        setPharmacy(refreshed.value);
+      }
+      return true;
+    } finally {
+      setSubmittingReview(false);
+    }
+  }
 
   function handleOpen(listing: InventoryListing) {
     router.push({ pathname: '/listing/[id]', params: { id: listing.id } });
@@ -87,6 +143,14 @@ export default function PharmacyDetailScreen() {
   function handleCall() {
     if (pharmacy?.phoneE164) {
       Linking.openURL(`tel:${pharmacy.phoneE164}`);
+    }
+  }
+
+  function handleDirections() {
+    if (pharmacy) {
+      Linking.openURL(
+        directionsUrl(pharmacy.location.latitude, pharmacy.location.longitude),
+      );
     }
   }
 
@@ -175,6 +239,46 @@ export default function PharmacyDetailScreen() {
                 </Pressable>
               ) : null}
             </View>
+            <Pressable
+              style={[styles.secondaryButton, { borderColor: palette.brand, marginTop: 8 }]}
+              onPress={handleDirections}
+            >
+              <Text style={[styles.secondaryText, { color: palette.brand }]}>Get directions</Text>
+            </Pressable>
+
+            <Text style={[styles.sectionTitle, { color: palette.ink }]}>
+              Reviews ({pharmacy.reviewCount})
+            </Text>
+            {reviews.slice(0, 5).map((review) => (
+              <ReviewCard key={review.id} review={review} />
+            ))}
+            {reviewsError ? (
+              <Text style={[styles.meta, { color: palette.danger }]}>{reviewsError}</Text>
+            ) : null}
+            {reviews.length === 0 && !reviewsError ? (
+              <Text style={[styles.meta, { color: palette.muted }]}>
+                No reviews yet — be the first to rate this pharmacy.
+              </Text>
+            ) : null}
+            {auth.user ? (
+              showReviewForm ? (
+                <ReviewForm submitting={submittingReview} onSubmit={handleSubmitReview} />
+              ) : (
+                <Pressable
+                  style={[styles.secondaryButton, { borderColor: palette.brand, marginTop: 8 }]}
+                  onPress={() => setShowReviewForm(true)}
+                >
+                  <Text style={[styles.secondaryText, { color: palette.brand }]}>Write a review</Text>
+                </Pressable>
+              )
+            ) : (
+              <View style={[styles.authCard, { backgroundColor: palette.surface }]}>
+                <Text style={[styles.meta, { color: palette.muted }]}>
+                  Sign in to write a review.
+                </Text>
+                <AuthForm />
+              </View>
+            )}
 
             <Text style={[styles.sectionTitle, { color: palette.ink }]}>
               Available medicines ({listings.length})
@@ -271,5 +375,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 14,
     marginTop: 24,
+  },
+  authCard: {
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 8,
   },
 });

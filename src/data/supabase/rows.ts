@@ -154,3 +154,14 @@ export type ConsultationMessageRow = {
   body: string;
   created_at: string;
 };
+
+export type PharmacyReviewRow = {
+  id: string;
+  pharmacy_id: string;
+  patient_id: string;
+  author_name: string;
+  rating: number | string;
+  comment: string;
+  created_at: string;
+  updated_at: string;
+};

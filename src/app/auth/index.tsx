@@ -60,7 +60,13 @@ export default function AuthScreen() {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Back"
-        onPress={() => router.back()}
+        onPress={() => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace('/onboarding/role');
+          }
+        }}
         style={styles.back}
       >
         <Text style={[styles.backText, { color: palette.brand }]}>← Back</Text>

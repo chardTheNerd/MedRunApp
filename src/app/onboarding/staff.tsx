@@ -18,7 +18,13 @@ export default function StaffOnboardingScreen() {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Back to role picker"
-        onPress={() => router.back()}
+        onPress={() => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace('/onboarding/role');
+          }
+        }}
         style={styles.back}
       >
         <Text style={[styles.backText, { color: palette.brand }]}>← Back</Text>

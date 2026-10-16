@@ -79,7 +79,16 @@ export default function OrdersScreen() {
         >
           <Text style={styles.signInText}>Sign in or create account</Text>
         </Pressable>
-        <Pressable onPress={() => router.back()} style={styles.link}>
+        <Pressable
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace('/');
+            }
+          }}
+          style={styles.link}
+        >
           <Text style={[styles.linkText, { color: palette.brand }]}>← Back to search</Text>
         </Pressable>
       </View>

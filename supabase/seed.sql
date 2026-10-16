@@ -309,7 +309,7 @@ begin
     updated_at = now();
 
   -- ============ Pharmacy reviews ============
-  -- Fictional sample reviews for development only. patient_id references
+-- Fictional sample reviews for development only. patient_id references
   -- public.users (which itself references auth.users), so reviews can only
   -- be authored by real signed-up users — no synthetic accounts. The seed
   -- owner writes one review per pharmacy; a 2nd and 3rd signed-up user each
@@ -363,6 +363,25 @@ begin
     comment = excluded.comment,
     updated_at = now();
 end $$;
+
+-- ============ Dev-only shortcuts (run separately, NOT inside the seed) ============
+-- Supabase's built-in SMTP usually no-ops on hosted projects, so users never
+-- receive confirmation emails. These snippets unblock a dev account.
+--
+-- Promote a user to pharmacy_admin. protect_user_role silently reverts role
+-- changes from non-admin callers (auth.uid() is null in the SQL Editor), so
+-- disable the trigger around the UPDATE.
+--
+--   ALTER TABLE public.users DISABLE TRIGGER protect_user_role;
+--   update public.users set role = 'pharmacy_admin'
+--     where email = 'you@example.com';
+--   ALTER TABLE public.users ENABLE TRIGGER protect_user_role;
+--
+-- Confirm a user without sending an email.
+--
+--   update auth.users
+--     set email_confirmed_at = now()
+--     where email = 'you@example.com';
 
 -- ============ Cleanup (run only to wipe the sample data) ============
 -- delete from public.pharmacy_reviews where id in (

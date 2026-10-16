@@ -1,6 +1,6 @@
 import { AppError } from '../../../core/errors/AppError';
 import { User } from '../../../domain/entities/User';
-import { RegisterInput } from '../../../domain/repositories/AuthRepository';
+import { RegisterInput, RegisterResult, SignInResult } from '../../../domain/repositories/AuthRepository';
 import { getSupabase } from '../SupabaseClient';
 import { throwIfError, mapAuthError } from '../errors';
 import { userFromRow } from '../mappers';
@@ -18,7 +18,7 @@ export async function fetchUserProfile(userId: string): Promise<User | null> {
   return data ? userFromRow(data as UserRow) : null;
 }
 
-export async function registerWithEmail(input: RegisterInput): Promise<User> {
+export async function registerWithEmail(input: RegisterInput): Promise<RegisterResult> {
   const supabase = getSupabase();
   const { data, error } = await supabase.auth.signUp({
     email: input.email,
@@ -40,22 +40,10 @@ export async function registerWithEmail(input: RegisterInput): Promise<User> {
   }
 
   // Email confirmation ON → no session yet. The handle_new_user trigger has
-  // already created the profile row server-side, so return a provisional user
-  // (role is always 'patient' at signup; promotion is an admin action).
-  // The UI should route to a "check your email" screen from here.
+  // already created the profile row server-side. Route the user to the
+  // "check your inbox" screen so they can verify before signing in.
   if (!data.session) {
-    return {
-      id: authUser.id,
-      role: 'patient',
-      displayName: input.displayName,
-      email: input.email,
-      phoneE164: input.phoneE164,
-      photoUrl: null,
-      locale: 'en-NG',
-      addresses: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    return { status: 'check-email', email: input.email, displayName: input.displayName };
   }
 
   // Session present (confirmation OFF or auto-confirmed): backfill/confirm the
@@ -80,7 +68,7 @@ export async function registerWithEmail(input: RegisterInput): Promise<User> {
   if (!created) {
     throw new AppError('unavailable', 'Account was created but the patient profile could not be loaded.');
   }
-  return created;
+  return { status: 'signed-in', user: created };
 }
 
 export async function resendSignupConfirmation(email: string): Promise<void> {
@@ -91,17 +79,22 @@ export async function resendSignupConfirmation(email: string): Promise<void> {
   }
 }
 
-export async function signInWithEmail(email: string, password: string): Promise<User> {
+export async function signInWithEmail(email: string, password: string): Promise<SignInResult> {
   const supabase = getSupabase();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
+    // If the account exists but hasn't confirmed yet, treat it as the
+    // "check your email" state so the UI can guide the user there.
+    if (error.code === 'email_not_confirmed') {
+      return { status: 'check-email', email };
+    }
     throw mapAuthError(error);
   }
   const profile = await currentAuthUser();
   if (!profile) {
     throw new AppError('not-found', 'No patient profile exists for this account.');
   }
-  return profile;
+  return { status: 'signed-in', user: profile };
 }
 
 export async function signOutCurrentUser(): Promise<void> {

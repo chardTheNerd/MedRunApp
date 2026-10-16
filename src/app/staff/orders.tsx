@@ -1,8 +1,8 @@
+import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { formatNaira } from '../../core/utils/money';
 import { OrderStatus } from '../../domain/entities/Order';
-import { AuthForm } from '../../presentation/components/AuthForm';
 import { useAuth } from '../../presentation/providers/AuthProvider';
 import { useStaff } from '../../presentation/providers/StaffProvider';
 import { useTheme } from '../../presentation/providers/ThemeProvider';
@@ -17,6 +17,7 @@ const NEXT_STATUS: Partial<Record<OrderStatus, { label: string; status: OrderSta
 
 /** Staff incoming orders: advance status through the fulfillment pipeline. */
 export default function StaffOrdersScreen() {
+  const router = useRouter();
   const auth = useAuth();
   const staff = useStaff();
   const { palette } = useTheme();
@@ -34,9 +35,12 @@ export default function StaffOrdersScreen() {
     return (
       <View style={[styles.center, { backgroundColor: palette.background }]}>
         <Text style={[styles.title, { color: palette.ink }]}>Staff sign in required</Text>
-        <View style={[styles.card, { backgroundColor: palette.card }]}>
-          <AuthForm />
-        </View>
+        <Pressable
+          style={[styles.button, { backgroundColor: palette.brand }]}
+          onPress={() => router.push('/onboarding/staff')}
+        >
+          <Text style={styles.buttonText}>Sign in</Text>
+        </Pressable>
       </View>
     );
   }
@@ -195,5 +199,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 13,
     marginTop: 16,
+  },
+  button: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    marginTop: 4,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 15,
+    textAlign: 'center',
   },
 });

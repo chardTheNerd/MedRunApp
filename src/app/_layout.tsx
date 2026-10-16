@@ -19,7 +19,14 @@ function ThemedStack() {
           },
         }}
       >
-        <Stack.Screen name="index" options={{ title: 'MedRun' }} />
+        <Stack.Screen name="splash" options={{ headerShown: false }} />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding/role" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding/patient" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding/staff" options={{ headerShown: false }} />
+        <Stack.Screen name="auth/index" options={{ headerShown: false }} />
+        <Stack.Screen name="auth/check-email" options={{ headerShown: false }} />
+        <Stack.Screen name="home" options={{ title: 'MedRun' }} />
         <Stack.Screen name="consult" options={{ title: 'Ask a Pharmacist' }} />
         <Stack.Screen name="listing/[id]" options={{ title: 'Medicine' }} />
         <Stack.Screen name="orders" options={{ title: 'My Orders' }} />

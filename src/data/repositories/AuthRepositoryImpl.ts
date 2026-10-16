@@ -1,10 +1,16 @@
 import { Result } from '../../core/types/result';
 import { User } from '../../domain/entities/User';
-import { AuthRepository, RegisterInput } from '../../domain/repositories/AuthRepository';
+import {
+  AuthRepository,
+  RegisterInput,
+  RegisterResult,
+  SignInResult,
+} from '../../domain/repositories/AuthRepository';
 import {
   currentAuthUser,
   observeAuthState,
   registerWithEmail,
+  resendSignupConfirmation,
   signInWithEmail,
   signOutCurrentUser,
 } from '../supabase/connectors/authConnector';
@@ -19,12 +25,16 @@ export class AuthRepositoryImpl implements AuthRepository {
     return observeAuthState(onChange);
   }
 
-  register(input: RegisterInput): Promise<Result<User>> {
+  register(input: RegisterInput): Promise<Result<RegisterResult>> {
     return wrap(() => registerWithEmail(input));
   }
 
-  signIn(email: string, password: string): Promise<Result<User>> {
+  signIn(email: string, password: string): Promise<Result<SignInResult>> {
     return wrap(() => signInWithEmail(email, password));
+  }
+
+  resendSignupConfirmation(email: string): Promise<Result<void>> {
+    return wrap(() => resendSignupConfirmation(email));
   }
 
   signOut(): Promise<Result<void>> {

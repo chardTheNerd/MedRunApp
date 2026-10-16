@@ -4,17 +4,18 @@ import { useTheme } from '../providers/ThemeProvider';
 
 import { useAuth } from '../providers/AuthProvider';
 
-/** Compact sign up / sign in form used wherever auth is required. */
-export function AuthForm() {
+/** Compact auth form with a Sign in / Create account toggle. Used wherever auth is required. */
+export function AuthForm({ initialMode = 'signin' }: { initialMode?: 'signin' | 'signup' }) {
   const { palette } = useTheme();
   const auth = useAuth();
-  const [displayName, setDisplayName] = useState('Test Patient');
+  const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
+  const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
 
-  async function handleAuth(mode: 'signup' | 'signin') {
-    if (!email.trim() || !password) {
+  async function handleSubmit() {
+    if (!email.trim() || !password || (mode === 'signup' && !displayName.trim())) {
       return;
     }
     setBusy(true);
@@ -42,21 +43,61 @@ export function AuthForm() {
 
   return (
     <View>
-      <TextInput
-        style={[
-          styles.input,
-          {
-            borderColor: palette.border,
-            color: palette.ink,
-            backgroundColor: palette.card,
-          },
-        ]}
-        placeholder="Display name"
-        placeholderTextColor={palette.muted}
-        value={displayName}
-        onChangeText={setDisplayName}
-        editable={!busy}
-      />
+      <View style={styles.toggleRow}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Show sign in"
+          onPress={() => setMode('signin')}
+          style={[
+            styles.toggle,
+            mode === 'signin' && { backgroundColor: palette.brandSoft },
+          ]}
+        >
+          <Text
+            style={[
+              styles.toggleText,
+              { color: mode === 'signin' ? palette.brandDark : palette.muted },
+            ]}
+          >
+            Sign in
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Show create account"
+          onPress={() => setMode('signup')}
+          style={[
+            styles.toggle,
+            mode === 'signup' && { backgroundColor: palette.brandSoft },
+          ]}
+        >
+          <Text
+            style={[
+              styles.toggleText,
+              { color: mode === 'signup' ? palette.brandDark : palette.muted },
+            ]}
+          >
+            Create account
+          </Text>
+        </Pressable>
+      </View>
+      {mode === 'signup' ? (
+        <TextInput
+          style={[
+            styles.input,
+            {
+              borderColor: palette.border,
+              color: palette.ink,
+              backgroundColor: palette.card,
+            },
+          ]}
+          placeholder="Display name"
+          placeholderTextColor={palette.muted}
+          value={displayName}
+          onChangeText={setDisplayName}
+          editable={!busy}
+        />
+      ) : null}
       <TextInput
         style={[
           styles.input,
@@ -83,34 +124,22 @@ export function AuthForm() {
             backgroundColor: palette.card,
           },
         ]}
-        placeholder="Password (min 6 chars)"
+        placeholder={mode === 'signup' ? 'Password (min 6 chars)' : 'Password'}
         placeholderTextColor={palette.muted}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
         editable={!busy}
       />
-      <View style={styles.buttonRow}>
-        <Pressable
-          style={[styles.button, { backgroundColor: palette.brand }, busy && styles.buttonDisabled]}
-          onPress={() => handleAuth('signup')}
-          disabled={busy}
-        >
-          <Text style={styles.buttonText}>{busy ? 'Working…' : 'Sign up'}</Text>
-        </Pressable>
-        <Pressable
-          style={[
-            styles.button,
-            styles.buttonSecondary,
-            { backgroundColor: palette.brandDark },
-            busy && styles.buttonDisabled,
-          ]}
-          onPress={() => handleAuth('signin')}
-          disabled={busy}
-        >
-          <Text style={styles.buttonText}>{busy ? 'Working…' : 'Sign in'}</Text>
-        </Pressable>
-      </View>
+      <Pressable
+        style={[styles.submit, { backgroundColor: palette.brand }, busy && styles.buttonDisabled]}
+        onPress={handleSubmit}
+        disabled={busy}
+      >
+        <Text style={styles.buttonText}>
+          {busy ? 'Working…' : mode === 'signup' ? 'Create account' : 'Sign in'}
+        </Text>
+      </Pressable>
       {auth.error ? <Text style={[styles.error, { color: palette.danger }]}>{auth.error}</Text> : null}
     </View>
   );
@@ -141,18 +170,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 8,
   },
-  buttonRow: {
+  toggleRow: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 4,
+    marginBottom: 12,
   },
-  button: {
+  toggle: {
     flex: 1,
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  toggleText: {
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  submit: {
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',
+    marginTop: 4,
   },
-  buttonSecondary: {},
   buttonDisabled: {
     opacity: 0.6,
   },

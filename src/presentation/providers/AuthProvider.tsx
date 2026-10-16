@@ -41,8 +41,9 @@ type AuthContextValue = AuthState & {
     password: string;
     displayName: string;
     phone?: string;
-  }) => Promise<boolean>;
-  signIn: (email: string, password: string) => Promise<boolean>;
+  }) => Promise<'signed-in' | 'check-email' | false>;
+  signIn: (email: string, password: string) => Promise<'signed-in' | 'check-email' | false>;
+  resendConfirmation: (email: string) => Promise<boolean>;
   signOut: () => Promise<void>;
 };
 
@@ -82,8 +83,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'failed', message: result.error.message });
       return false;
     }
-    dispatch({ type: 'signedIn', user: result.value });
-    return true;
+    if (result.value.status === 'signed-in') {
+      dispatch({ type: 'signedIn', user: result.value.user });
+      return 'signed-in';
+    }
+    dispatch({ type: 'failed', message: 'Check your inbox to confirm your email.' });
+    return 'check-email';
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
@@ -93,7 +98,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'failed', message: result.error.message });
       return false;
     }
-    dispatch({ type: 'signedIn', user: result.value });
+    if (result.value.status === 'signed-in') {
+      dispatch({ type: 'signedIn', user: result.value.user });
+      return 'signed-in';
+    }
+    dispatch({ type: 'failed', message: 'Check your inbox to confirm your email.' });
+    return 'check-email';
+  }, []);
+
+  const resendConfirmation = useCallback(async (email: string) => {
+    const result = await container.repositories.auth.resendSignupConfirmation(email);
+    if (!result.ok) {
+      dispatch({ type: 'failed', message: result.error.message });
+      return false;
+    }
     return true;
   }, []);
 
@@ -103,8 +121,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ ...state, registerPatient, signIn, signOut }),
-    [state, registerPatient, signIn, signOut],
+    () => ({ ...state, registerPatient, signIn, resendConfirmation, signOut }),
+    [state, registerPatient, signIn, resendConfirmation, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

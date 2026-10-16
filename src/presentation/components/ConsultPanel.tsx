@@ -1,7 +1,7 @@
+import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Consultation } from '../../domain/entities/Consultation';
-import { AuthForm } from '../components/AuthForm';
 import { useAuth } from '../providers/AuthProvider';
 import { useCatalog } from '../providers/CatalogProvider';
 import { useConsultations } from '../providers/ConsultationProvider';
@@ -19,6 +19,7 @@ export type ConsultPanelParams = {
  * the bottom sheet and (as a fallback) the /consult route.
  */
 export function ConsultPanel({ drug, pharmacyId, consultationId }: ConsultPanelParams) {
+  const router = useRouter();
   const auth = useAuth();
   const catalog = useCatalog();
   const consultations = useConsultations();
@@ -102,7 +103,12 @@ export function ConsultPanel({ drug, pharmacyId, consultationId }: ConsultPanelP
         <Text style={[styles.body, { color: palette.muted }]}>
           Consultations are linked to your account so a licensed pharmacist can follow up.
         </Text>
-        <AuthForm />
+        <Pressable
+          style={[styles.button, { backgroundColor: palette.brand }]}
+          onPress={() => router.push('/onboarding/role')}
+        >
+          <Text style={styles.buttonText}>Sign in or create account</Text>
+        </Pressable>
       </View>
     );
   }

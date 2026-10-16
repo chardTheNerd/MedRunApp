@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { AuthForm } from '../../presentation/components/AuthForm';
 import { PharmacyAvatar } from '../../presentation/components/PharmacyAvatar';
 import { useAuth } from '../../presentation/providers/AuthProvider';
 import { useStaff } from '../../presentation/providers/StaffProvider';
@@ -34,9 +33,12 @@ export default function StaffDashboardScreen() {
         <Text style={[styles.body, { color: palette.muted }]}>
           Sign in with your pharmacy staff account to manage inventory, orders, and chats.
         </Text>
-        <View style={[styles.card, { backgroundColor: palette.card }]}>
-          <AuthForm />
-        </View>
+        <Pressable
+          style={[styles.signOut, { backgroundColor: palette.brand }]}
+          onPress={() => router.push('/onboarding/staff')}
+        >
+          <Text style={[styles.signOutText, { color: '#FFFFFF' }]}>Sign in</Text>
+        </Pressable>
       </View>
     );
   }
@@ -51,6 +53,9 @@ export default function StaffDashboardScreen() {
           Signed in as {auth.user.displayName} (role: {auth.user.role}). Ask a pharmacy admin to
           add you to a pharmacy&apos;s staff, then come back.
         </Text>
+        <Pressable onPress={() => auth.signOut()} style={styles.signOut}>
+          <Text style={[styles.signOutText, { color: palette.brand }]}>Sign out</Text>
+        </Pressable>
       </View>
     );
   }
@@ -189,5 +194,14 @@ const styles = StyleSheet.create({
   sectionHint: {
     fontSize: 13,
     marginTop: 4,
+  },
+  signOut: {
+    marginTop: 16,
+    alignItems: 'center',
+    padding: 8,
+  },
+  signOutText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

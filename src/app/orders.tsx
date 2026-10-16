@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { container } from '../di/container';
-import { AuthForm } from '../presentation/components/AuthForm';
 import { OrderCard } from '../presentation/components/OrderCard';
 import { useAuth } from '../presentation/providers/AuthProvider';
 import { useCatalog } from '../presentation/providers/CatalogProvider';
@@ -74,9 +73,12 @@ export default function OrdersScreen() {
         <Text style={[styles.body, { color: palette.muted }]}>
           Orders are linked to your account so you can track pickup and delivery.
         </Text>
-        <View style={[styles.card, { backgroundColor: palette.card }]}>
-          <AuthForm />
-        </View>
+        <Pressable
+          style={[styles.signIn, { backgroundColor: palette.brand }]}
+          onPress={() => router.push('/onboarding/role')}
+        >
+          <Text style={styles.signInText}>Sign in or create account</Text>
+        </Pressable>
         <Pressable onPress={() => router.back()} style={styles.link}>
           <Text style={[styles.linkText, { color: palette.brand }]}>← Back to search</Text>
         </Pressable>
@@ -159,5 +161,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 13,
     marginTop: 16,
+  },
+  signIn: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    marginTop: 4,
+  },
+  signInText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 15,
+    textAlign: 'center',
   },
 });

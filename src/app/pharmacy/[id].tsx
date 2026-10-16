@@ -6,7 +6,6 @@ import { container } from '../../di/container';
 import { InventoryListing } from '../../domain/entities/InventoryListing';
 import { Pharmacy } from '../../domain/entities/Pharmacy';
 import { PharmacyReview } from '../../domain/entities/PharmacyReview';
-import { AuthForm } from '../../presentation/components/AuthForm';
 import { ListingCard } from '../../presentation/components/ListingCard';
 import { PharmacyAvatar } from '../../presentation/components/PharmacyAvatar';
 import { ReviewCard } from '../../presentation/components/ReviewCard';
@@ -276,7 +275,12 @@ export default function PharmacyDetailScreen() {
                 <Text style={[styles.meta, { color: palette.muted }]}>
                   Sign in to write a review.
                 </Text>
-                <AuthForm />
+                <Pressable
+                  style={[styles.secondaryButton, { borderColor: palette.brand, marginTop: 8 }]}
+                  onPress={() => router.push('/onboarding/role')}
+                >
+                  <Text style={[styles.secondaryText, { color: palette.brand }]}>Sign in or create account</Text>
+                </Pressable>
               </View>
             )}
 

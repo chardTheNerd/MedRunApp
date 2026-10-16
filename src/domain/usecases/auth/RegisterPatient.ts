@@ -1,8 +1,7 @@
 import { AppError } from '../../../core/errors/AppError';
 import { err, Result } from '../../../core/types/result';
 import { toE164Ng } from '../../../core/utils/phoneNg';
-import { User } from '../../entities/User';
-import { AuthRepository } from '../../repositories/AuthRepository';
+import { AuthRepository, RegisterResult } from '../../repositories/AuthRepository';
 
 export class RegisterPatient {
   constructor(private readonly auth: AuthRepository) {}
@@ -12,7 +11,7 @@ export class RegisterPatient {
     password: string;
     displayName: string;
     phone?: string;
-  }): Promise<Result<User>> {
+  }): Promise<Result<RegisterResult>> {
     const phoneE164 = input.phone ? toE164Ng(input.phone) : null;
     if (input.phone && !phoneE164) {
       return Promise.resolve(err(new AppError('validation', 'Enter a valid Nigerian phone number.')));

@@ -7,7 +7,6 @@ import { formatNaira } from '../../core/utils/money';
 import { InventoryListing } from '../../domain/entities/InventoryListing';
 import { FulfillmentType } from '../../domain/entities/Order';
 import { DeliveryAddress } from '../../domain/entities/User';
-import { AuthForm } from '../../presentation/components/AuthForm';
 import { useAuth } from '../../presentation/providers/AuthProvider';
 import { useCatalog } from '../../presentation/providers/CatalogProvider';
 import { useConsultSheet } from '../../presentation/providers/consultSheetContext';
@@ -319,7 +318,15 @@ export default function ListingDetailScreen() {
           {!auth.user ? (
             <View style={[styles.card, { backgroundColor: palette.card }]}>
               <Text style={[styles.cardTitle, { color: palette.ink }]}>Sign in to buy</Text>
-              <AuthForm />
+              <Text style={[styles.muted, { color: palette.muted }]}>
+                Sign in or create a patient account, then come back here to place your order.
+              </Text>
+              <Pressable
+                style={[styles.secondaryButton, { borderColor: palette.brand, marginTop: 8 }]}
+                onPress={() => router.push('/onboarding/role')}
+              >
+                <Text style={[styles.secondaryText, { color: palette.brand }]}>Sign in or create account</Text>
+              </Pressable>
             </View>
           ) : null}
 
